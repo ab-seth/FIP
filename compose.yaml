@@ -25,6 +25,8 @@ services:
       FIP_DATABASE_URL: ${FIP_DATABASE_URL:-postgresql+psycopg://fip:fip@db:5432/fip}
       FIP_JWT_SECRET: ${FIP_JWT_SECRET:-development-only-secret-change-before-use}
       FIP_ACCESS_TOKEN_MINUTES: ${FIP_ACCESS_TOKEN_MINUTES:-30}
+      FIP_LOGIN_MAX_ATTEMPTS: ${FIP_LOGIN_MAX_ATTEMPTS:-3}
+      FIP_LOGIN_LOCK_MINUTES: ${FIP_LOGIN_LOCK_MINUTES:-15}
       FIP_BOOTSTRAP_ADMIN_USERNAME: ${FIP_BOOTSTRAP_ADMIN_USERNAME:-admin}
       FIP_BOOTSTRAP_ADMIN_PASSWORD: ${FIP_BOOTSTRAP_ADMIN_PASSWORD:-admin-change-me}
     command: ["sh", "-c", "alembic upgrade head && python -m fip_api.bootstrap && uvicorn fip_api.main:app --host 0.0.0.0 --port 8000"]
@@ -44,7 +46,8 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      FIP_API_URL: http://api:8000
+      FIP_COOKIE_SECURE: "false"
     ports:
       - "3000:3000"
     depends_on:

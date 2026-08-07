@@ -13,6 +13,8 @@ FIP is a modular monorepo with independently runnable and deployable services:
 
 The frontend and backend are separate applications. The backend is a modular monolith for the MVP: ingestion, scoring, explainability, cases, audit, and evaluation remain isolated modules inside one API deployment.
 
+Browser authentication crosses a small server-side boundary in the Next.js application. The web server exchanges credentials with the API and keeps the short-lived API token in an `HttpOnly`, `SameSite=Lax` cookie; the token is never exposed to browser JavaScript or local storage. The API enforces temporary account lockout after repeated failed sign-in attempts.
+
 ## Prerequisites
 
 - Node.js 24+
@@ -48,6 +50,8 @@ The services are available at:
 - API documentation: `http://localhost:8000/docs`
 - API liveness: `http://localhost:8000/health`
 - API readiness: `http://localhost:8000/api/v1/health/ready`
+
+The bootstrap account configured in `.env` can enter the workspace at `/login`. Change the example credentials before sharing any environment.
 
 ## Quality checks
 
