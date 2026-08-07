@@ -1,0 +1,55 @@
+name: fip
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-fip}
+      POSTGRES_USER: ${POSTGRES_USER:-fip}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fip}
+    ports:
+      - "5432:5432"
+    volumes:
+      - fip_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fip} -d ${POSTGRES_DB:-fip}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+    environment:
+      FIP_ENVIRONMENT: ${FIP_ENVIRONMENT:-development}
+      FIP_DATABASE_URL: ${FIP_DATABASE_URL:-postgresql+psycopg://fip:fip@db:5432/fip}
+      FIP_JWT_SECRET: ${FIP_JWT_SECRET:-development-only-secret-change-before-use}
+      FIP_ACCESS_TOKEN_MINUTES: ${FIP_ACCESS_TOKEN_MINUTES:-30}
+      FIP_BOOTSTRAP_ADMIN_USERNAME: ${FIP_BOOTSTRAP_ADMIN_USERNAME:-admin}
+      FIP_BOOTSTRAP_ADMIN_PASSWORD: ${FIP_BOOTSTRAP_ADMIN_PASSWORD:-admin-change-me}
+    command: ["sh", "-c", "alembic upgrade head && python -m fip_api.bootstrap && uvicorn fip_api.main:app --host 0.0.0.0 --port 8000"]
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  fip_postgres_data:
