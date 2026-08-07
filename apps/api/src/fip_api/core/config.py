@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import SecretStr, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_JWT_SECRET = "development-only-secret-change-before-use"
@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     jwt_secret: SecretStr = SecretStr(DEFAULT_JWT_SECRET)
     jwt_algorithm: str = "HS256"
     access_token_minutes: int = 30
+    login_max_attempts: int = Field(default=3, ge=2, le=10)
+    login_lock_minutes: int = Field(default=15, ge=1, le=1440)
     bootstrap_admin_username: str | None = None
     bootstrap_admin_password: SecretStr | None = None
     cors_origins: list[str] = ["http://localhost:3000"]

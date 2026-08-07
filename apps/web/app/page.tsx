@@ -1,3 +1,8 @@
+import { redirect } from "next/navigation";
+
+import { getCurrentUser } from "@/lib/auth/server";
+
+import { AccountMenu } from "./components/account-menu";
 import { DateStamp } from "./components/date-stamp";
 
 const navigation = [
@@ -24,7 +29,24 @@ function ImportMark() {
   );
 }
 
-export default function Home() {
+function accountInitials(username: string) {
+  const parts = username.split(/[._\-\s]+/).filter(Boolean);
+  if (parts.length > 1) {
+    return parts.slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  }
+  return username.slice(0, 2).toUpperCase();
+}
+
+function roleLabel(role: string) {
+  return role.charAt(0).toUpperCase() + role.slice(1);
+}
+
+export default async function Home() {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/login");
+  }
+
   return (
     <div className="app-frame">
       <aside className="sidebar">
@@ -64,9 +86,11 @@ export default function Home() {
             <span aria-label="Zero cases awaiting review" className="review-count">
               <strong>0</strong> awaiting review
             </span>
-            <button aria-label="Open account menu" className="account-button" type="button">
-              SA
-            </button>
+            <AccountMenu
+              initials={accountInitials(user.username)}
+              role={roleLabel(user.role)}
+              username={user.username}
+            />
           </div>
         </header>
 
