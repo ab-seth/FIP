@@ -38,6 +38,18 @@ The `ingestion` module owns source parsing and canonical transaction creation. C
 
 The browser sends raw CSV bytes through a same-origin Next.js route. That server route attaches the short-lived API credential from the `HttpOnly` session cookie, preserving the authentication boundary established by workspace entry. Public-dataset adapters will target the same canonical transaction schema rather than add dataset-specific fields to scoring modules.
 
+## Semantic rules boundary
+
+Every new canonical transaction receives a versioned semantic feature snapshot and deterministic
+rule assessment in the same database commit as intake. Historical features use only earlier
+transactions for the same account, and amount comparisons are restricted to the same currency.
+Triggered rules expose their exact point contribution and evidence values.
+
+This rules-only score is a review-priority signal, not a fraud probability or final combined risk
+assessment. Public research datasets and their anonymized fields are excluded from this operational
+path. The contract and limitations are documented in
+[`semantic-risk-rules.md`](semantic-risk-rules.md).
+
 ## Design system
 
 The approved frontend direction is **Forensic Ledger**: a warm archival canvas, white evidence surfaces, compact navigation, editorial case hierarchy, and restrained risk accents. LLM output is presented as a cited case brief rather than a chat interface.
