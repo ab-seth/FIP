@@ -22,6 +22,11 @@ deterministic rule assessment in the same commit. The rules-only score, evidence
 version records, and limitations are documented in
 [`docs/semantic-risk-rules.md`](docs/semantic-risk-rules.md).
 
+Operationally compatible model versions can be registered into a governed candidate lifecycle and,
+after independent evaluator approval, produce immutable shadow-only predictions. Shadow output never
+changes the rules-only score or triggers a financial action. The gates and tamper-evident lineage are
+documented in [`docs/model-governance.md`](docs/model-governance.md).
+
 ## Prerequisites
 
 - Node.js 24+

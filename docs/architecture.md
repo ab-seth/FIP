@@ -62,6 +62,19 @@ not demonstrate production efficacy because most features are undisclosed PCA co
 dataset decision and promotion gate are documented in
 [`ml-research-evidence.md`](ml-research-evidence.md).
 
+## Governed shadow model boundary
+
+The operational model registry stores immutable version metadata and a hash-linked lifecycle. An
+administrator may register a candidate, but a different evaluator must authorize entry into shadow
+mode. Research-purpose, unapproved-data, source-incompatible, wrong-feature-version, and
+insufficiently evaluated models are blocked.
+
+A trusted internal runtime may record an immutable shadow output only when its artifact checksum,
+feature version, and runtime contract match the registration. Shadow predictions reference the
+exact feature snapshot and authorization event and cannot modify the deterministic rule assessment.
+There is no production-active state or external score-submission endpoint. The complete contract is
+documented in [`model-governance.md`](model-governance.md).
+
 ## Design system
 
 The approved frontend direction is **Forensic Ledger**: a warm archival canvas, white evidence surfaces, compact navigation, editorial case hierarchy, and restrained risk accents. LLM output is presented as a cited case brief rather than a chat interface.

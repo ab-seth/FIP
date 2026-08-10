@@ -89,4 +89,4 @@ feature snapshot to any authenticated FIP role.
 - UTC off-hours are deliberately deterministic but are not a substitute for account-local time.
 - The 30-day history is limited to transactions already present when the immutable snapshot is made.
 - No supervised model, anomaly detector, public dataset, exchange-rate feed, or automatic case action
-  participates in this score.
+  participates in this score. Separately stored shadow-model outputs never modify it.
