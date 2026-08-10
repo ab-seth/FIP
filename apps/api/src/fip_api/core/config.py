@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     access_token_minutes: int = 30
     login_max_attempts: int = Field(default=3, ge=2, le=10)
     login_lock_minutes: int = Field(default=15, ge=1, le=1440)
+    transaction_upload_max_bytes: int = Field(default=10 * 1024 * 1024, ge=1024)
+    transaction_upload_max_rows: int = Field(default=10_000, ge=1, le=100_000)
     bootstrap_admin_username: str | None = None
     bootstrap_admin_password: SecretStr | None = None
     cors_origins: list[str] = ["http://localhost:3000"]

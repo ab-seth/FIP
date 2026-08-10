@@ -15,6 +15,8 @@ The frontend and backend are separate applications. The backend is a modular mon
 
 Browser authentication crosses a small server-side boundary in the Next.js application. The web server exchanges credentials with the API and keeps the short-lived API token in an `HttpOnly`, `SameSite=Lax` cookie; the token is never exposed to browser JavaScript or local storage. The API enforces temporary account lockout after repeated failed sign-in attempts.
 
+Transaction intake accepts a canonical REST payload or an analyst CSV import. CSV validation is read-only, a valid import commits atomically, and SHA-256 receipts make exact replays idempotent. The canonical fields and endpoint behavior are documented in [`docs/transaction-intake.md`](docs/transaction-intake.md).
+
 ## Prerequisites
 
 - Node.js 24+

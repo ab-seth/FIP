@@ -32,6 +32,12 @@ Modules may share a process and database while preserving explicit service, sche
 
 The API issues short-lived signed access tokens and enforces the roles `administrator`, `analyst`, `manager`, and `evaluator`. Passwords are hashed with Argon2. Secrets are provided through the environment and must be replaced outside local development.
 
+## Transaction intake boundary
+
+The `ingestion` module owns source parsing and canonical transaction creation. CSV validation is a read-only operation; import repeats validation and writes its ingestion batch and all transactions in one database commit. The raw source checksum is unique, so an exact replay returns the original receipt without creating duplicates. An external transaction identifier cannot be reused with different data.
+
+The browser sends raw CSV bytes through a same-origin Next.js route. That server route attaches the short-lived API credential from the `HttpOnly` session cookie, preserving the authentication boundary established by workspace entry. Public-dataset adapters will target the same canonical transaction schema rather than add dataset-specific fields to scoring modules.
+
 ## Design system
 
 The approved frontend direction is **Forensic Ledger**: a warm archival canvas, white evidence surfaces, compact navigation, editorial case hierarchy, and restrained risk accents. LLM output is presented as a cited case brief rather than a chat interface.

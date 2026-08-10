@@ -16,4 +16,4 @@ FIP will train and evaluate its initial fraud models with public transaction dat
 - Generated records are limited to small automated-test fixtures; they are never presented as model evidence.
 - A dataset without confirmed reuse terms is blocked from training even if it is publicly downloadable.
 
-The ingestion and model batches will add executable adapters and manifests under this directory after the corresponding feature mockups and implementation plan are approved.
+The canonical adapter target is documented in [`../docs/transaction-intake.md`](../docs/transaction-intake.md). The model baseline batch will add executable adapters and manifests under this directory after its feature plan and evidence gates are approved.
