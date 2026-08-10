@@ -7,13 +7,14 @@ operational scoring path.
 ## Dataset decision
 
 1. [IEEE-CIS Fraud Detection](https://www.kaggle.com/competitions/ieee-fraud-detection) is the
-   preferred research candidate because it contains real e-commerce
-   transactions and retains more semantic context than ULB. Its adapter remains blocked until a
-   project maintainer accepts and records the current Kaggle competition terms.
-2. The [ULB credit-card fraud dataset](https://www.openml.org/d/1597) is a secondary methodology
-   benchmark. Its transactions are real,
-   but `V1` through `V28` are undisclosed PCA features that FIP cannot reproduce for a newly ingested
-   canonical transaction.
+   preferred semantically richer research candidate because it contains real e-commerce
+   transactions. Its adapter remains blocked until a project maintainer accepts and records the
+   current Kaggle competition terms.
+2. The [ULB credit-card fraud dataset](https://www.openml.org/d/1597) is the first executable,
+   research-only methodology benchmark. Its transactions are real, but `V1` through `V28` are
+   undisclosed PCA features that FIP cannot reproduce for a newly ingested canonical transaction.
+   Its temporal training, calibration, validation, test, metrics, and model-card workflow is
+   documented in [`../docs/ml-research-evidence.md`](../docs/ml-research-evidence.md).
 3. The public
    [PLOS/Figshare transaction sample](https://doi.org/10.6084/m9.figshare.17030138) was rejected for
    model training. The paper reports
@@ -36,3 +37,6 @@ documented in [`../docs/semantic-risk-rules.md`](../docs/semantic-risk-rules.md)
 
 Research adapters must remain isolated from operational scoring. Their future manifests and model
 cards will state that boundary explicitly.
+
+Machine-readable provenance and approval records live in `manifests/`. Raw source rows and generated
+model artifacts remain ignored by Git.

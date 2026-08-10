@@ -1,0 +1,11 @@
+{
+  "dataset_id": "kaggle-ieee-cis-fraud-detection",
+  "display_name": "IEEE-CIS Fraud Detection",
+  "source_page": "https://www.kaggle.com/competitions/ieee-fraud-detection",
+  "terms_page": "https://www.kaggle.com/competitions/ieee-fraud-detection/rules",
+  "provenance": "Real e-commerce transactions supplied for the IEEE-CIS Kaggle competition",
+  "access_status": "blocked_pending_maintainer_terms_acceptance",
+  "operational_feature_compatible": false,
+  "operational_block_reason": "Competition access terms require explicit maintainer acceptance and the dataset contains source-specific fields",
+  "raw_data_committed": false
+}

@@ -18,6 +18,8 @@ dependencies = [
 [project.scripts]
 fip-api-backfill-rule-assessments = "fip_api.backfill_assessments:main"
 fip-api-bootstrap = "fip_api.bootstrap:main"
+fip-research-fetch-ulb = "fip_api.research_ml.fetch_ulb:main"
+fip-research-train = "fip_api.research_ml.cli:main"
 
 [dependency-groups]
 dev = [
@@ -26,6 +28,11 @@ dev = [
   "pytest>=9.1.1,<10.0",
   "pytest-cov>=7.1.0,<8.0",
   "ruff>=0.16.1,<1.0",
+]
+research = [
+  "joblib>=1.5.3,<2.0",
+  "numpy>=2.4.2,<3.0",
+  "scikit-learn>=1.8.0,<2.0",
 ]
 
 [build-system]
@@ -53,5 +60,5 @@ strict = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["pwdlib.*"]
+module = ["joblib", "pwdlib.*", "sklearn.*"]
 ignore_missing_imports = true
