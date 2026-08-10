@@ -81,6 +81,15 @@ exact feature snapshot and authorization event and cannot modify the determinist
 There is no production-active state or external score-submission endpoint. The complete contract is
 documented in [`model-governance.md`](model-governance.md).
 
+## Shadow evaluation boundary
+
+The `model_evaluation` module reads immutable shadow predictions, canonical feature snapshots,
+deterministic rule assessments, and model lineage. It can persist a checksummed comparison report but
+has no dependency edge into ingestion, deterministic scoring, lifecycle transitions, cases, or
+alerts. Rules/model disagreement is explicitly comparison evidence rather than a labeled accuracy
+measure. Metric definitions and initial drift heuristics are documented in
+[`shadow-model-evaluation.md`](shadow-model-evaluation.md).
+
 ## Design system
 
 The approved frontend direction is **Forensic Ledger**: a warm archival canvas, white evidence surfaces, compact navigation, editorial case hierarchy, and restrained risk accents. LLM output is presented as a cited case brief rather than a chat interface.

@@ -17,6 +17,8 @@ from fip_api.model_registry.shadow import (
     build_shadow_prediction_response,
     list_shadow_predictions,
     score_shadow_transaction,
+    verify_feature_snapshot_integrity,
+    verify_shadow_prediction_integrity,
 )
 
 __all__ = [
@@ -35,5 +37,7 @@ __all__ = [
     "register_model",
     "score_shadow_transaction",
     "transition_model",
+    "verify_feature_snapshot_integrity",
     "verify_model_lineage",
+    "verify_shadow_prediction_integrity",
 ]

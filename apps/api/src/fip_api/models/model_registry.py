@@ -181,3 +181,61 @@ class ShadowModelPrediction(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+
+class ShadowModelEvaluationReport(Base):
+    __tablename__ = "shadow_model_evaluation_reports"
+    __table_args__ = (
+        CheckConstraint(
+            "baseline_window_start < baseline_window_end",
+            name="ck_shadow_evaluations_baseline_window",
+        ),
+        CheckConstraint(
+            "baseline_window_end <= evaluation_window_start",
+            name="ck_shadow_evaluations_nonoverlapping_windows",
+        ),
+        CheckConstraint(
+            "evaluation_window_start < evaluation_window_end",
+            name="ck_shadow_evaluations_evaluation_window",
+        ),
+        CheckConstraint(
+            "baseline_prediction_count >= 20",
+            name="ck_shadow_evaluations_baseline_count",
+        ),
+        CheckConstraint(
+            "evaluation_prediction_count >= 20",
+            name="ck_shadow_evaluations_evaluation_count",
+        ),
+        UniqueConstraint(
+            "model_id",
+            "baseline_window_start",
+            "baseline_window_end",
+            "evaluation_window_start",
+            "evaluation_window_end",
+            name="uq_shadow_evaluation_model_windows",
+        ),
+        Index("ix_shadow_evaluations_model_id", "model_id"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    model_id: Mapped[str] = mapped_column(
+        ForeignKey("registered_models.id", ondelete="RESTRICT"), nullable=False
+    )
+    requested_by_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
+    )
+    report_schema_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    baseline_window_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    baseline_window_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    evaluation_window_start: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    evaluation_window_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    baseline_prediction_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    evaluation_prediction_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    metrics: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
+    input_lineage_checksum: Mapped[str] = mapped_column(String(64), nullable=False)
+    report_checksum: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )

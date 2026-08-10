@@ -97,10 +97,15 @@ GET /api/v1/transactions/{transaction_id}/shadow-predictions
 Every response states `shadow_only: true` and `affects_operational_score: false`. Exact replays for
 the same model version and feature snapshot are idempotent.
 
+Evaluators can aggregate verified predictions into immutable baseline-versus-evaluation monitoring
+reports. The reports measure score and feature drift, latency, threshold rates, and rules/model
+disagreement without changing model status or operational scoring. See
+[`shadow-model-evaluation.md`](shadow-model-evaluation.md).
+
 ## What this feature does not claim
 
 - No model is approved for production or real customer data.
 - No public research artifact is deployable against canonical transactions.
 - No shadow score changes the rules-only assessment or analyst queue.
-- No automated intervention, retraining, drift decision, or model promotion occurs.
+- No automated intervention, retraining, lifecycle decision, or model promotion occurs.
 - No serialized artifact is loaded from an untrusted request.

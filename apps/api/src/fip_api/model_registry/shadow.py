@@ -85,7 +85,7 @@ def score_shadow_transaction(
     )
     if feature_snapshot is None:
         raise GovernanceViolation("A compatible immutable feature snapshot is not available.")
-    if not _verify_feature_snapshot(feature_snapshot, transaction):
+    if not verify_feature_snapshot_integrity(feature_snapshot, transaction):
         raise GovernanceViolation("Feature snapshot integrity verification failed.")
 
     existing = db.scalar(
@@ -159,34 +159,9 @@ def build_shadow_prediction_response(
     snapshot = db.get(TransactionFeatureSnapshot, prediction.feature_snapshot_id)
     authorization_event = db.get(ModelLifecycleEvent, prediction.authorization_event_id)
     transaction = db.get(Transaction, prediction.transaction_id)
-    integrity_verified = False
-    if None not in (model, snapshot, authorization_event, transaction):
-        assert model is not None
-        assert snapshot is not None
-        assert authorization_event is not None
-        assert transaction is not None
-        expected_checksum = canonical_json_checksum(
-            _prediction_facts(
-                output_schema_version=prediction.output_schema_version,
-                external_transaction_id=transaction.external_transaction_id,
-                feature_snapshot_checksum=snapshot.snapshot_checksum,
-                registration_checksum=model.registration_checksum,
-                authorization_event_checksum=authorization_event.event_checksum,
-                score=prediction.score,
-                threshold=prediction.threshold,
-                would_exceed_threshold=prediction.would_exceed_threshold,
-                factors=prediction.factor_contributions,
-                runtime_milliseconds=prediction.runtime_milliseconds,
-                created_at=prediction.created_at,
-            )
-        )
-        integrity_verified = (
-            expected_checksum == prediction.prediction_checksum
-            and verify_model_lineage(db, model)
-            and _verify_feature_snapshot(snapshot, transaction)
-        )
+    integrity_verified = verify_shadow_prediction_integrity(db, prediction)
 
-    if model is None or snapshot is None or authorization_event is None:
+    if model is None or snapshot is None or authorization_event is None or transaction is None:
         raise GovernanceViolation("Shadow prediction references missing lineage records.")
     return ShadowPredictionResponse(
         id=prediction.id,
@@ -226,7 +201,53 @@ def _verify_runtime_contract(model: RegisteredModel, runtime: ShadowRuntime) -> 
         )
 
 
-def _verify_feature_snapshot(
+def verify_shadow_prediction_integrity(
+    db: Session,
+    prediction: ShadowModelPrediction,
+) -> bool:
+    model = db.get(RegisteredModel, prediction.model_id)
+    snapshot = db.get(TransactionFeatureSnapshot, prediction.feature_snapshot_id)
+    authorization_event = db.get(ModelLifecycleEvent, prediction.authorization_event_id)
+    transaction = db.get(Transaction, prediction.transaction_id)
+    if None in (model, snapshot, authorization_event, transaction):
+        return False
+    assert model is not None
+    assert snapshot is not None
+    assert authorization_event is not None
+    assert transaction is not None
+    expected_checksum = canonical_json_checksum(
+        _prediction_facts(
+            output_schema_version=prediction.output_schema_version,
+            external_transaction_id=transaction.external_transaction_id,
+            feature_snapshot_checksum=snapshot.snapshot_checksum,
+            registration_checksum=model.registration_checksum,
+            authorization_event_checksum=authorization_event.event_checksum,
+            score=prediction.score,
+            threshold=prediction.threshold,
+            would_exceed_threshold=prediction.would_exceed_threshold,
+            factors=prediction.factor_contributions,
+            runtime_milliseconds=prediction.runtime_milliseconds,
+            created_at=prediction.created_at,
+        )
+    )
+    return (
+        expected_checksum == prediction.prediction_checksum
+        and prediction.output_schema_version == SHADOW_OUTPUT_SCHEMA_VERSION
+        and prediction.transaction_id == transaction.id
+        and prediction.feature_snapshot_id == snapshot.id
+        and prediction.authorization_event_id == authorization_event.id
+        and snapshot.transaction_id == transaction.id
+        and snapshot.feature_set_version == model.feature_set_version
+        and authorization_event.model_id == model.id
+        and authorization_event.to_status == ModelLifecycleStatus.SHADOW.value
+        and model.decision_threshold is not None
+        and prediction.threshold == model.decision_threshold
+        and verify_model_lineage(db, model)
+        and verify_feature_snapshot_integrity(snapshot, transaction)
+    )
+
+
+def verify_feature_snapshot_integrity(
     snapshot: TransactionFeatureSnapshot,
     transaction: Transaction,
 ) -> bool:
