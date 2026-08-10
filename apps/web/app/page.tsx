@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth/server";
 
 import { AccountMenu } from "./components/account-menu";
 import { DateStamp } from "./components/date-stamp";
+import { TransactionIntake } from "./components/transaction-intake";
 
 const navigation = [
   { label: "Case register", marker: "01", active: true },
@@ -17,14 +18,6 @@ function RegisterMark() {
     <svg aria-hidden="true" className="register-mark" viewBox="0 0 40 40">
       <path d="M8 7.5h24v25H8z" />
       <path d="M13 14h14M13 20h9M13 26h14" />
-    </svg>
-  );
-}
-
-function ImportMark() {
-  return (
-    <svg aria-hidden="true" className="import-mark" viewBox="0 0 48 48">
-      <path d="M24 8v22M16.5 22.5 24 30l7.5-7.5M10 35v5h28v-5" />
     </svg>
   );
 }
@@ -115,10 +108,9 @@ export default async function Home() {
               analyst decision will be preserved in the evidence record.
             </p>
             <div className="empty-actions">
-              <button className="primary-action" type="button">
-                <ImportMark />
-                Import transaction file
-              </button>
+              {user.role === "administrator" || user.role === "analyst" ? (
+                <TransactionIntake />
+              ) : null}
               <a className="text-action" href="#preparation-note">
                 Read the preparation guide <span aria-hidden="true">→</span>
               </a>
