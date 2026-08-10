@@ -5,7 +5,12 @@ import type { ReactNode } from "react";
 import { AccountMenu } from "./account-menu";
 import { DateStamp } from "./date-stamp";
 
-type NavigationKey = "case_register" | "case_dossiers" | "audit_ledger" | "evaluation_record";
+type NavigationKey =
+  | "case_register"
+  | "case_dossiers"
+  | "audit_ledger"
+  | "ml_datasets"
+  | "evaluation_record";
 
 const navigation: Array<{
   key: NavigationKey;
@@ -16,7 +21,8 @@ const navigation: Array<{
   { key: "case_register", label: "Case register", marker: "01", href: "/" },
   { key: "case_dossiers", label: "Case dossiers", marker: "02", href: "#dossier" },
   { key: "audit_ledger", label: "Audit ledger", marker: "03", href: "#audit-ledger" },
-  { key: "evaluation_record", label: "Evaluation record", marker: "04", href: "#evaluation-record" },
+  { key: "ml_datasets", label: "ML datasets", marker: "04", href: "/ml/datasets" },
+  { key: "evaluation_record", label: "Evaluation record", marker: "05", href: "#evaluation-record" },
 ];
 
 export function WorkspaceShell({
@@ -49,7 +55,13 @@ export function WorkspaceShell({
               <li key={item.key}>
                 <Link
                   aria-current={item.key === activeNavigation ? "page" : undefined}
-                  href={item.key === "case_register" || item.key === activeNavigation ? item.href : "#"}
+                  href={
+                    item.key === "case_register" ||
+                    item.key === "ml_datasets" ||
+                    item.key === activeNavigation
+                      ? item.href
+                      : "#"
+                  }
                 >
                   <span className="navigation-marker">{item.marker}</span>
                   <span>{item.label}</span>

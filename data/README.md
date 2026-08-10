@@ -27,6 +27,11 @@ Production supervised scoring remains disabled until FIP has reviewed institutio
 compatible licensed partner dataset. Deterministic operational rules use only the canonical fields
 documented in [`../docs/semantic-risk-rules.md`](../docs/semantic-risk-rules.md).
 
+Independently approved institution-owned demonstration labels can now be frozen into governed,
+identifier-reduced operational dataset snapshots. Readiness and provenance behavior are documented in
+[`../docs/operational-ml-datasets.md`](../docs/operational-ml-datasets.md). This does not make the
+current label inventory statistically sufficient or authorize training.
+
 ## Repository policy
 
 - Raw or prepared dataset rows are never committed.

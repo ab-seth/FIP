@@ -174,3 +174,78 @@ export interface CaseDetail extends CaseSummary {
   evidence: CaseRuleEvidence;
   events: CaseEvent[];
 }
+
+export type DatasetReadinessStatus = "blocked" | "ready";
+export type DatasetSplit = "train" | "validation" | "test";
+
+export interface DatasetReadinessGate {
+  gate: string;
+  passed: boolean;
+  observed: unknown;
+  required: string;
+  detail: string;
+}
+
+export interface DatasetReadiness {
+  cutoff_at: string;
+  eligible_label_count: number;
+  positive_label_count: number;
+  negative_label_count: number;
+  excluded_integrity_failures: number;
+  excluded_feature_contract_mismatches: number;
+  excluded_temporal_leakage: number;
+  feature_set_version: string;
+  label_contract_version: string;
+  readiness_status: DatasetReadinessStatus;
+  gates: DatasetReadinessGate[];
+}
+
+export interface DatasetSplitCounts {
+  train: number;
+  validation: number;
+  test: number;
+}
+
+export interface OperationalDatasetSummary {
+  id: string;
+  display_id: string;
+  feature_set_version: string;
+  label_contract_version: string;
+  split_contract_version: string;
+  feature_names: string[];
+  row_count: number;
+  positive_count: number;
+  negative_count: number;
+  split_counts: DatasetSplitCounts;
+  readiness_status: DatasetReadinessStatus;
+  readiness_gates: DatasetReadinessGate[];
+  creation_reason: string;
+  cutoff_at: string;
+  created_by: string;
+  source_manifest_checksum: string;
+  dataset_checksum: string;
+  integrity_verified: boolean;
+  created_at: string;
+}
+
+export interface OperationalDatasetRow {
+  row_index: number;
+  occurred_at: string;
+  split: DatasetSplit;
+  label: 0 | 1;
+  feature_values: Record<string, unknown>;
+  feature_snapshot_checksum: string;
+  outcome_checksum: string;
+  review_checksum: string;
+  row_checksum: string;
+}
+
+export interface OperationalDatasetDetail extends OperationalDatasetSummary {
+  rows: OperationalDatasetRow[];
+  rows_truncated: boolean;
+}
+
+export interface DatasetSnapshotCreateResponse {
+  created: boolean;
+  dataset: OperationalDatasetDetail;
+}

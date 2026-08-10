@@ -76,5 +76,7 @@ assessments do not create cases.
 - Case assignment, service-level timers, attachments, and external evidence stores are deferred.
 - Labels remain institution-owned demonstration evidence; they are not claims of ground truth from
   a bank or card network.
-- Dataset curation, temporal leakage checks, class-imbalance policy, training, calibration, and model
-  admission remain separate governed features.
+- Dataset curation, temporal leakage checks, class-balance readiness, immutable manifests, and
+  chronological partitions are implemented in the separate
+  [`operational-ml-datasets.md`](operational-ml-datasets.md) boundary. Training, calibration, and
+  model admission remain later governed features.

@@ -33,6 +33,11 @@ start, notes, one final human classification, an append-only hash chain, and ind
 future-training-label review. See
 [`../../docs/investigation-cases.md`](../../docs/investigation-cases.md).
 
+`GET /api/v1/ml/datasets/readiness` exposes approved-label, integrity, class-balance, temporal, and
+holdout gates. Administrators can freeze those sources with `POST /api/v1/ml/datasets/snapshots`;
+the result excludes direct identifiers, is immutable checksummed evidence, and does not trigger training. See
+[`../../docs/operational-ml-datasets.md`](../../docs/operational-ml-datasets.md).
+
 The offline `fip-research-verify-candidate` command re-trains a completed public-dataset experiment,
 verifies its source evidence, and exports a fresh checksummed artifact bundle with a research-only
 registry payload. It does not call the API or promote a lifecycle. See
