@@ -10,6 +10,7 @@ uv run alembic upgrade head
 uv run fip-api-bootstrap
 uv run fip-api-backfill-rule-assessments
 uv run fip-api-backfill-cases
+uv run fip-operational-train --help
 uv run uvicorn fip_api.main:app --reload
 uv run pytest
 ```
@@ -37,6 +38,11 @@ future-training-label review. See
 holdout gates. Administrators can freeze those sources with `POST /api/v1/ml/datasets/snapshots`;
 the result excludes direct identifiers, is immutable checksummed evidence, and does not trigger training. See
 [`../../docs/operational-ml-datasets.md`](../../docs/operational-ml-datasets.md).
+
+The offline `fip-operational-train` command accepts only a ready, integrity-verified operational
+snapshot. It writes reproducible supervised and anomaly candidate artifacts, evidence, model cards,
+and validated registration payloads without calling the registry or executing either model. See
+[`../../docs/operational-candidate-training.md`](../../docs/operational-candidate-training.md).
 
 The offline `fip-research-verify-candidate` command re-trains a completed public-dataset experiment,
 verifies its source evidence, and exports a fresh checksummed artifact bundle with a research-only

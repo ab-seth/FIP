@@ -41,6 +41,13 @@ Snapshots exclude direct identifiers, use chronological partitions, expose expli
 gates, and re-verify every source and row checksum. A snapshot never starts training. See
 [`docs/operational-ml-datasets.md`](docs/operational-ml-datasets.md).
 
+A separate offline trainer can consume only a ready, freshly verified snapshot and produce
+reproducible supervised and anomaly candidate bundles. It uses training-only preprocessing,
+chronological calibration, validation-only selection and thresholding, one held-out test evaluation,
+model cards, checksummed artifacts, and schema-valid registration payloads. It never registers or
+promotes a model. See
+[`docs/operational-candidate-training.md`](docs/operational-candidate-training.md).
+
 ## Prerequisites
 
 - Node.js 24+
@@ -99,6 +106,10 @@ scoring.
 Completed research runs can be independently replayed into checksummed, registry-ready research
 candidate dossiers without deserializing the supplied artifact. See
 [`docs/ml-candidate-dossiers.md`](docs/ml-candidate-dossiers.md).
+
+Operational training is deliberately separate from those public-data research workflows. A real
+operational run requires a ready institution-owned snapshot; generated fixtures are test-only and
+the repository makes no claim that the current label inventory is sufficient.
 
 ## Status
 
