@@ -23,7 +23,14 @@ from fip_api.ingestion.service import (
     receipt_from_batch,
     validation_response,
 )
-from fip_api.models import Transaction, User, UserRole
+from fip_api.models import RuleRiskLevel, Transaction, User, UserRole
+from fip_api.rules import EVALUATED_RULE_COUNT
+from fip_api.schemas.risk import (
+    FeatureSnapshotResponse,
+    RuleAssessmentResponse,
+    RuleTriggerResponse,
+    SemanticFeatureValues,
+)
 from fip_api.schemas.transaction import (
     TransactionCreate,
     TransactionIngestResponse,
@@ -31,6 +38,7 @@ from fip_api.schemas.transaction import (
     UploadImportResponse,
     UploadValidationResponse,
 )
+from fip_api.scoring import find_current_rule_assessment
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 IntakeUser = Annotated[
@@ -183,6 +191,41 @@ def get_transaction(
     if transaction is None:
         raise HTTPException(status_code=404, detail="Transaction not found")
     return transaction
+
+
+@router.get("/{transaction_id}/rule-assessment", response_model=RuleAssessmentResponse)
+def get_rule_assessment(
+    transaction_id: str,
+    db: Database,
+    user: AuthenticatedUser,
+) -> RuleAssessmentResponse:
+    del user
+    result = find_current_rule_assessment(db, transaction_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Rule assessment not found")
+    snapshot, assessment = result
+    return RuleAssessmentResponse(
+        transaction_id=assessment.transaction_id,
+        ruleset_version=assessment.ruleset_version,
+        risk_band_version=assessment.risk_band_version,
+        evaluated_rule_count=EVALUATED_RULE_COUNT,
+        rule_score=assessment.rule_score,
+        risk_level=RuleRiskLevel(assessment.risk_level),
+        triggered_rules=[
+            RuleTriggerResponse.model_validate(trigger) for trigger in assessment.triggered_rules
+        ],
+        assessment_checksum=assessment.assessment_checksum,
+        feature_snapshot=FeatureSnapshotResponse(
+            feature_set_version=snapshot.feature_set_version,
+            history_window_start=snapshot.history_window_start,
+            history_window_end=snapshot.history_window_end,
+            history_checksum=snapshot.history_checksum,
+            snapshot_checksum=snapshot.snapshot_checksum,
+            values=SemanticFeatureValues.model_validate(snapshot.feature_values),
+            created_at=snapshot.created_at,
+        ),
+        created_at=assessment.created_at,
+    )
 
 
 async def _read_upload(request: Request, max_bytes: int) -> bytes:

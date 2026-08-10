@@ -17,6 +17,11 @@ Browser authentication crosses a small server-side boundary in the Next.js appli
 
 Transaction intake accepts a canonical REST payload or an analyst CSV import. CSV validation is read-only, a valid import commits atomically, and SHA-256 receipts make exact replays idempotent. The canonical fields and endpoint behavior are documented in [`docs/transaction-intake.md`](docs/transaction-intake.md).
 
+Every newly stored transaction also receives an immutable semantic feature snapshot and transparent
+deterministic rule assessment in the same commit. The rules-only score, evidence contributions,
+version records, and limitations are documented in
+[`docs/semantic-risk-rules.md`](docs/semantic-risk-rules.md).
+
 ## Prerequisites
 
 - Node.js 24+

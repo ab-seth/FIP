@@ -5,7 +5,15 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from fip_api.core.security import hash_password
-from fip_api.models import IngestionBatch, Transaction, User, UserRole
+from fip_api.models import (
+    IngestionBatch,
+    Transaction,
+    TransactionFeatureSnapshot,
+    TransactionRuleAssessment,
+    User,
+    UserRole,
+)
+from fip_api.scoring import backfill_rule_assessments
 
 PASSWORD = "strong-password"
 CSV_HEADER = (
@@ -86,8 +94,21 @@ def test_rest_ingestion_is_replay_safe_and_retrievable(
     retrieved = client.get(f"/api/v1/transactions/{transaction_id}", headers=headers)
     assert retrieved.status_code == 200
     assert retrieved.json()["external_transaction_id"] == "TX-API-001"
+    assessment = client.get(
+        f"/api/v1/transactions/{transaction_id}/rule-assessment",
+        headers=headers,
+    )
+    assert assessment.status_code == 200
+    assert assessment.json()["scoring_method"] == "deterministic_rules"
+    assert assessment.json()["rule_score"] == 15
+    assert assessment.json()["risk_level"] == "low"
+    assert assessment.json()["triggered_rules"][0]["rule_id"] == (
+        "R004_CROSS_BORDER_CARD_NOT_PRESENT"
+    )
     assert db_session.scalar(select(func.count()).select_from(Transaction)) == 1
     assert db_session.scalar(select(func.count()).select_from(IngestionBatch)) == 1
+    assert db_session.scalar(select(func.count()).select_from(TransactionFeatureSnapshot)) == 1
+    assert db_session.scalar(select(func.count()).select_from(TransactionRuleAssessment)) == 1
 
 
 def test_rest_ingestion_rejects_identifier_with_different_data(
@@ -133,6 +154,8 @@ def test_csv_validation_is_read_only_then_imports_atomically(
     assert replayed.json()["batch"]["id"] == imported.json()["batch"]["id"]
     assert db_session.scalar(select(func.count()).select_from(Transaction)) == 1
     assert db_session.scalar(select(func.count()).select_from(IngestionBatch)) == 1
+    assert db_session.scalar(select(func.count()).select_from(TransactionFeatureSnapshot)) == 1
+    assert db_session.scalar(select(func.count()).select_from(TransactionRuleAssessment)) == 1
 
 
 def test_invalid_csv_returns_row_errors_and_persists_nothing(
@@ -201,11 +224,20 @@ def test_upload_role_boundary_and_authenticated_read(
         f"/api/v1/transactions/{created.json()['transaction']['id']}",
         headers=evaluator,
     )
+    allowed_assessment = client.get(
+        f"/api/v1/transactions/{created.json()['transaction']['id']}/rule-assessment",
+        headers=evaluator,
+    )
     missing_auth = client.get(f"/api/v1/transactions/{created.json()['transaction']['id']}")
+    missing_assessment_auth = client.get(
+        f"/api/v1/transactions/{created.json()['transaction']['id']}/rule-assessment"
+    )
 
     assert denied.status_code == 403
     assert allowed_read.status_code == 200
+    assert allowed_assessment.status_code == 200
     assert missing_auth.status_code == 401
+    assert missing_assessment_auth.status_code == 401
 
 
 def test_csv_filename_and_header_contract_are_enforced(
@@ -227,3 +259,93 @@ def test_csv_filename_and_header_contract_are_enforced(
     assert wrong_extension.json()["errors"][0]["code"] == "invalid_file_type"
     assert missing_column.status_code == 200
     assert missing_column.json()["errors"][0]["code"] == "missing_columns"
+
+
+def test_behavioral_rules_use_prior_canonical_transactions(
+    client: TestClient, db_session: Session
+) -> None:
+    headers = auth_headers(client, db_session, role=UserRole.ANALYST)
+    for index in range(5):
+        payload = transaction_payload(f"TX-HISTORY-{index}")
+        payload.update(
+            {
+                "occurred_at": f"2026-08-08T09:{index * 10:02d}:00Z",
+                "amount": "100.00",
+                "merchant_reference": "MER-BASE",
+                "merchant_category_code": "5411",
+                "channel": "card_present",
+                "destination_country": "RW",
+            }
+        )
+        created = client.post("/api/v1/transactions", json=payload, headers=headers)
+        assert created.status_code == 201
+
+    target = transaction_payload("TX-HIGH-RISK")
+    target.update(
+        {
+            "occurred_at": "2026-08-08T09:50:00Z",
+            "amount": "600.00",
+            "merchant_reference": "MER-NEW",
+            "merchant_category_code": "6011",
+            "channel": "card_not_present",
+            "destination_country": "KE",
+        }
+    )
+    created = client.post("/api/v1/transactions", json=target, headers=headers)
+    transaction_id = created.json()["transaction"]["id"]
+
+    assessment = client.get(
+        f"/api/v1/transactions/{transaction_id}/rule-assessment",
+        headers=headers,
+    )
+
+    assert created.status_code == 201
+    assert assessment.status_code == 200
+    assert assessment.json()["rule_score"] == 90
+    assert assessment.json()["risk_level"] == "high"
+    assert assessment.json()["feature_snapshot"]["values"] == {
+        "amount": "600.00",
+        "currency": "USD",
+        "occurred_hour_utc": 9,
+        "occurred_day_of_week_utc": 5,
+        "is_weekend_utc": True,
+        "is_off_hours_utc": False,
+        "is_cross_border": True,
+        "channel": "card_not_present",
+        "merchant_reference": "MER-NEW",
+        "merchant_category_code": "6011",
+        "source_country": "RW",
+        "destination_country": "KE",
+        "prior_transaction_count_1h": 5,
+        "prior_transaction_count_24h": 5,
+        "prior_transaction_count_30d": 5,
+        "prior_same_currency_count_30d": 5,
+        "prior_same_currency_median_amount_30d": "100.00",
+        "amount_to_median_ratio_30d": "6.000",
+        "merchant_seen_before_30d": False,
+    }
+    assert [rule["rule_id"] for rule in assessment.json()["triggered_rules"]] == [
+        "R001_RAPID_ACCOUNT_ACTIVITY",
+        "R002_AMOUNT_SPIKE",
+        "R003_NEW_MERCHANT",
+        "R004_CROSS_BORDER_CARD_NOT_PRESENT",
+        "R005_ELEVATED_REVIEW_MCC",
+    ]
+
+
+def test_rule_assessment_backfill_is_idempotent(client: TestClient, db_session: Session) -> None:
+    headers = auth_headers(client, db_session, role=UserRole.ADMINISTRATOR)
+    created = client.post("/api/v1/transactions", json=transaction_payload(), headers=headers)
+    assert created.status_code == 201
+
+    assessment = db_session.scalar(select(TransactionRuleAssessment))
+    assert assessment is not None
+    snapshot = db_session.get(TransactionFeatureSnapshot, assessment.feature_snapshot_id)
+    assert snapshot is not None
+    db_session.delete(assessment)
+    db_session.flush()
+    db_session.delete(snapshot)
+    db_session.commit()
+
+    assert backfill_rule_assessments(db_session) == 1
+    assert backfill_rule_assessments(db_session) == 0

@@ -17,6 +17,7 @@ from fip_api.schemas.transaction import (
     TransactionPreview,
     UploadValidationResponse,
 )
+from fip_api.scoring import assess_transaction
 
 
 def find_batch_by_checksum(db: Session, checksum: str) -> IngestionBatch | None:
@@ -99,16 +100,21 @@ def create_csv_ingestion(db: Session, upload: ParsedUpload, user: User) -> Inges
     )
     db.add(batch)
     db.flush()
-    db.add_all(
-        [
-            _transaction_model(
-                row.transaction,
-                ingestion_batch_id=batch.id,
-                source_row_number=row.row_number,
-            )
-            for row in upload.transactions
-        ]
-    )
+    transactions = [
+        _transaction_model(
+            row.transaction,
+            ingestion_batch_id=batch.id,
+            source_row_number=row.row_number,
+        )
+        for row in upload.transactions
+    ]
+    db.add_all(transactions)
+    db.flush()
+    for transaction in sorted(
+        transactions,
+        key=lambda item: (item.occurred_at, item.external_transaction_id),
+    ):
+        assess_transaction(db, transaction)
     db.commit()
     db.refresh(batch)
     return batch
@@ -132,6 +138,8 @@ def create_api_ingestion(
         source_row_number=1,
     )
     db.add_all([batch, transaction])
+    db.flush()
+    assess_transaction(db, transaction)
     db.commit()
     db.refresh(batch)
     db.refresh(transaction)

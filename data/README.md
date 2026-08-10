@@ -1,12 +1,30 @@
 # Data workspace
 
-FIP will train and evaluate its initial fraud models with public transaction datasets rather than generated training data.
+FIP uses public transaction data only for reproducible research evaluation. No reviewed public
+dataset currently has the semantic compatibility required to activate a supervised model in the
+operational scoring path.
 
-## Dataset order
+## Dataset decision
 
-1. The anonymized ULB credit-card fraud dataset is the primary baseline because it contains real transactions, a documented fraud label, and a manageable schema for the first reproducible pipeline.
-2. IEEE-CIS Fraud Detection is an optional second adapter for broader identity and e-commerce signals, subject to confirming that its current competition terms permit the intended use.
-3. Additional datasets must pass provenance, licensing, privacy, schema, and label-quality review before an adapter is merged.
+1. [IEEE-CIS Fraud Detection](https://www.kaggle.com/competitions/ieee-fraud-detection) is the
+   preferred research candidate because it contains real e-commerce
+   transactions and retains more semantic context than ULB. Its adapter remains blocked until a
+   project maintainer accepts and records the current Kaggle competition terms.
+2. The [ULB credit-card fraud dataset](https://www.openml.org/d/1597) is a secondary methodology
+   benchmark. Its transactions are real,
+   but `V1` through `V28` are undisclosed PCA features that FIP cannot reproduce for a newly ingested
+   canonical transaction.
+3. The public
+   [PLOS/Figshare transaction sample](https://doi.org/10.6084/m9.figshare.17030138) was rejected for
+   model training. The paper reports
+   60,595 transactions and 28 fraud labels, while the available historical repository files contain
+   only 3,500 rows and six fraud labels; the latest repository version has no downloadable file.
+4. Additional datasets must pass provenance, licensing, privacy, schema, label-quality, and
+   deployable-feature review before an adapter is merged.
+
+Production supervised scoring remains disabled until FIP has reviewed institution-owned labels or a
+compatible licensed partner dataset. Deterministic operational rules use only the canonical fields
+documented in [`../docs/semantic-risk-rules.md`](../docs/semantic-risk-rules.md).
 
 ## Repository policy
 
@@ -16,4 +34,5 @@ FIP will train and evaluate its initial fraud models with public transaction dat
 - Generated records are limited to small automated-test fixtures; they are never presented as model evidence.
 - A dataset without confirmed reuse terms is blocked from training even if it is publicly downloadable.
 
-The canonical adapter target is documented in [`../docs/transaction-intake.md`](../docs/transaction-intake.md). The model baseline batch will add executable adapters and manifests under this directory after its feature plan and evidence gates are approved.
+Research adapters must remain isolated from operational scoring. Their future manifests and model
+cards will state that boundary explicitly.

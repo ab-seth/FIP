@@ -16,6 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
+fip-api-backfill-rule-assessments = "fip_api.backfill_assessments:main"
 fip-api-bootstrap = "fip_api.bootstrap:main"
 
 [dependency-groups]
