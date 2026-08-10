@@ -52,8 +52,10 @@ The initial MVP gates are intentionally conservative:
 | Holdout coverage | Both labels in train, validation, and test partitions. |
 
 Meeting these gates only permits a later training experiment. It is not evidence of model quality,
-fairness, generalization, or production fitness. The later training feature must still perform
-calibration, held-out evaluation, error analysis, robustness review, and model governance.
+fairness, generalization, or production fitness. The separate operational candidate trainer still
+performs chronological calibration, validation-only selection and thresholding, held-out evaluation,
+diagnostic importance, and model-governance handoff. See
+[`operational-candidate-training.md`](operational-candidate-training.md).
 
 ## Chronological split
 
@@ -92,6 +94,7 @@ All endpoints require authentication.
 
 - The labels are demonstration/institution-owned evidence, not verified card-network ground truth.
 - The minimum thresholds are admission safeguards, not statistical sufficiency guarantees.
-- No model training, artifact serialization, registry submission, or shadow inference occurs here.
-- Dataset download and external object storage are deferred until the operational trainer contract is
-  implemented.
+- Creating or reading a dataset still never triggers model training, artifact serialization,
+  registry submission, or shadow inference.
+- A separate offline command can explicitly train a ready snapshot, but external artifact storage and
+  trusted shadow-runtime distribution remain deferred.

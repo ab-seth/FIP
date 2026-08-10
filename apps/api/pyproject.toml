@@ -19,6 +19,7 @@ dependencies = [
 fip-api-backfill-rule-assessments = "fip_api.backfill_assessments:main"
 fip-api-backfill-cases = "fip_api.backfill_cases:main"
 fip-api-bootstrap = "fip_api.bootstrap:main"
+fip-operational-train = "fip_api.operational_ml.cli:main"
 fip-research-fetch-ulb = "fip_api.research_ml.fetch_ulb:main"
 fip-research-train = "fip_api.research_ml.cli:main"
 fip-research-verify-candidate = "fip_api.research_ml.dossier_cli:main"
@@ -32,6 +33,11 @@ dev = [
   "ruff>=0.16.1,<1.0",
 ]
 research = [
+  "joblib>=1.5.3,<2.0",
+  "numpy>=2.4.2,<3.0",
+  "scikit-learn>=1.8.0,<2.0",
+]
+training = [
   "joblib>=1.5.3,<2.0",
   "numpy>=2.4.2,<3.0",
   "scikit-learn>=1.8.0,<2.0",

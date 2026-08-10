@@ -117,6 +117,21 @@ valid evidence of insufficient or imbalanced labels; it cannot be represented as
 No training or model lifecycle action is triggered. See
 [`operational-ml-datasets.md`](operational-ml-datasets.md).
 
+## Operational candidate training boundary
+
+The `operational_ml` package is an offline consumer of one ready operational dataset snapshot. It
+re-verifies dataset integrity and exact feature, label, and temporal-split contracts before fitting.
+Preprocessing learns only from chronological training rows; a training-tail partition is reserved
+for supervised calibration, validation controls candidate selection and thresholds, and test is
+evaluated once after selection.
+
+The package creates independently checksummed supervised and anomaly artifacts, model cards,
+aggregate evidence, and schema-valid registry payloads. Dependency direction remains one way: it may
+read `training_datasets` and registry input schemas, while API routing, ingestion, cases, rules,
+scoring, registry services, and shadow recording never invoke training. The trainer has no registry
+client and no lifecycle or prediction write path. See
+[`operational-candidate-training.md`](operational-candidate-training.md).
+
 ## Design system
 
 The approved frontend direction is **Forensic Ledger**: a warm archival canvas, white evidence surfaces, compact navigation, editorial case hierarchy, and restrained risk accents. LLM output is presented as a cited case brief rather than a chat interface.

@@ -30,7 +30,9 @@ documented in [`../docs/semantic-risk-rules.md`](../docs/semantic-risk-rules.md)
 Independently approved institution-owned demonstration labels can now be frozen into governed,
 identifier-reduced operational dataset snapshots. Readiness and provenance behavior are documented in
 [`../docs/operational-ml-datasets.md`](../docs/operational-ml-datasets.md). This does not make the
-current label inventory statistically sufficient or authorize training.
+current label inventory statistically sufficient or authorize training. The explicit offline
+training mechanism and its non-registration boundary are documented in
+[`../docs/operational-candidate-training.md`](../docs/operational-candidate-training.md).
 
 ## Repository policy
 
