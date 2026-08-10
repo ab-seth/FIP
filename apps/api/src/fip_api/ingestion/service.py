@@ -8,6 +8,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from fip_api.cases import open_case_for_assessment
 from fip_api.ingestion.csv_parser import ParsedUpload
 from fip_api.models import IngestionBatch, IngestionSourceType, Transaction, User
 from fip_api.schemas.transaction import (
@@ -114,7 +115,8 @@ def create_csv_ingestion(db: Session, upload: ParsedUpload, user: User) -> Inges
         transactions,
         key=lambda item: (item.occurred_at, item.external_transaction_id),
     ):
-        assess_transaction(db, transaction)
+        snapshot, assessment = assess_transaction(db, transaction)
+        open_case_for_assessment(db, transaction, snapshot, assessment)
     db.commit()
     db.refresh(batch)
     return batch
@@ -139,7 +141,8 @@ def create_api_ingestion(
     )
     db.add_all([batch, transaction])
     db.flush()
-    assess_transaction(db, transaction)
+    snapshot, assessment = assess_transaction(db, transaction)
+    open_case_for_assessment(db, transaction, snapshot, assessment)
     db.commit()
     db.refresh(batch)
     db.refresh(transaction)

@@ -1,3 +1,14 @@
+from fip_api.models.case import (
+    AnalystCase,
+    CaseClassification,
+    CaseEvent,
+    CaseEventType,
+    CaseOutcome,
+    CaseOutcomeReview,
+    CasePriority,
+    CaseStatus,
+    OutcomeReviewStatus,
+)
 from fip_api.models.model_registry import (
     ModelKind,
     ModelLifecycleEvent,
@@ -22,6 +33,14 @@ from fip_api.models.transaction import (
 from fip_api.models.user import User, UserRole
 
 __all__ = [
+    "AnalystCase",
+    "CaseClassification",
+    "CaseEvent",
+    "CaseEventType",
+    "CaseOutcome",
+    "CaseOutcomeReview",
+    "CasePriority",
+    "CaseStatus",
     "IngestionBatch",
     "IngestionSourceType",
     "ModelKind",
@@ -29,6 +48,7 @@ __all__ = [
     "ModelLifecycleStatus",
     "ModelPurpose",
     "ModelRuntimeContract",
+    "OutcomeReviewStatus",
     "RegisteredModel",
     "RuleRiskLevel",
     "ShadowModelEvaluationReport",
