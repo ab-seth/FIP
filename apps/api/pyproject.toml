@@ -20,6 +20,7 @@ fip-api-backfill-rule-assessments = "fip_api.backfill_assessments:main"
 fip-api-bootstrap = "fip_api.bootstrap:main"
 fip-research-fetch-ulb = "fip_api.research_ml.fetch_ulb:main"
 fip-research-train = "fip_api.research_ml.cli:main"
+fip-research-verify-candidate = "fip_api.research_ml.dossier_cli:main"
 
 [dependency-groups]
 dev = [

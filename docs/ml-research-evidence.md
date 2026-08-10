@@ -50,6 +50,11 @@ The output directory is created atomically and contains:
 
 An existing output directory is never overwritten.
 
+Completed runs can be independently re-trained and converted into a tamper-evident, registry-ready
+research candidate dossier. The verifier does not deserialize the supplied joblib artifact. See
+[`ml-candidate-dossiers.md`](ml-candidate-dossiers.md) for the command, replay controls, and the
+non-promotion boundary.
+
 The first verified full-data result is recorded in
 [`evidence/ulb-credit-card-v1-seed-42.md`](evidence/ulb-credit-card-v1-seed-42.md). The recorded report
 contains metrics and source checksums, but never the raw rows or serialized model.

@@ -57,6 +57,12 @@ checksums, and model-card generation live under `fip_api.research_ml`. This pack
 dependency edge from the API router, ingestion service, or operational scoring service. Its public
 datasets use source-specific features and cannot register an operational model.
 
+The same package owns an offline candidate-dossier adapter. It re-trains from a raw file that matches
+the reviewed provider manifest, reproduces held-out evaluation without loading the supplied
+serialized artifact, and builds a fresh checksummed artifact bundle with a schema-valid research
+candidate. Dependency direction is one way: the offline adapter can use the registry input schema,
+while API routing and operational scoring never import research code.
+
 The first executable benchmark uses real ULB/OpenML transactions to validate methodology. It does
 not demonstrate production efficacy because most features are undisclosed PCA components. The
 dataset decision and promotion gate are documented in

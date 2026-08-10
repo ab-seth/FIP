@@ -21,3 +21,8 @@ for the feature, rule, score-band, and API contracts.
 shadow model metadata under role and compatibility gates. Recorded shadow outputs are available at
 `GET /api/v1/transactions/{transaction_id}/shadow-predictions`; they never alter rule assessments.
 See [`../../docs/model-governance.md`](../../docs/model-governance.md).
+
+The offline `fip-research-verify-candidate` command re-trains a completed public-dataset experiment,
+verifies its source evidence, and exports a fresh checksummed artifact bundle with a research-only
+registry payload. It does not call the API or promote a lifecycle. See
+[`../../docs/ml-candidate-dossiers.md`](../../docs/ml-candidate-dossiers.md).
