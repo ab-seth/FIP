@@ -90,6 +90,20 @@ alerts. Rules/model disagreement is explicitly comparison evidence rather than a
 measure. Metric definitions and initial drift heuristics are documented in
 [`shadow-model-evaluation.md`](shadow-model-evaluation.md).
 
+## Investigation case boundary
+
+The `cases` module converts medium and high deterministic assessments into a human review queue. A
+case pins the exact transaction, semantic feature snapshot, and rule assessment that caused the
+review threshold to be met. Review start, notes, final classification, and label-quality review are
+append-only hash-linked events; a damaged chain is readable as failed evidence but cannot be
+extended through the API.
+
+The analyst's one-time classification closes the case. A separate evaluator decision only controls
+future-ML label eligibility and cannot change that classification. Inconclusive outcomes are never
+training-eligible, and no cases dependency reaches into training, model registration, shadow
+prediction, lifecycle transition, or transaction action code. See
+[`investigation-cases.md`](investigation-cases.md).
+
 ## Design system
 
 The approved frontend direction is **Forensic Ledger**: a warm archival canvas, white evidence surfaces, compact navigation, editorial case hierarchy, and restrained risk accents. LLM output is presented as a cited case brief rather than a chat interface.

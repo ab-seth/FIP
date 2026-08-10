@@ -1,17 +1,12 @@
+import type { CaseSummary } from "@fip/contracts";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/lib/auth/server";
+import { getCases } from "@/lib/cases/server";
 
-import { AccountMenu } from "./components/account-menu";
-import { DateStamp } from "./components/date-stamp";
 import { TransactionIntake } from "./components/transaction-intake";
-
-const navigation = [
-  { label: "Case register", marker: "01", active: true },
-  { label: "Case dossiers", marker: "02", active: false },
-  { label: "Audit ledger", marker: "03", active: false },
-  { label: "Evaluation record", marker: "04", active: false },
-];
+import { WorkspaceShell } from "./components/workspace-shell";
 
 function RegisterMark() {
   return (
@@ -22,80 +17,39 @@ function RegisterMark() {
   );
 }
 
-function accountInitials(username: string) {
-  const parts = username.split(/[._\-\s]+/).filter(Boolean);
-  if (parts.length > 1) {
-    return parts.slice(0, 2).map((part) => part[0]).join("").toUpperCase();
-  }
-  return username.slice(0, 2).toUpperCase();
-}
-
-function roleLabel(role: string) {
-  return role.charAt(0).toUpperCase() + role.slice(1);
-}
-
 export default async function Home() {
   const user = await getCurrentUser();
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
+
+  const cases = await getCases();
+  const activeCases = cases.filter((item) => item.status !== "classified");
+  const canImport = user.role === "administrator" || user.role === "analyst";
 
   return (
-    <div className="app-frame">
-      <aside className="sidebar">
-        <div className="identity">
-          <span className="monogram">FIP</span>
-          <span className="identity-name">Financial Integrity Platform</span>
-        </div>
-
-        <nav aria-label="Primary navigation" className="primary-navigation">
-          <p className="navigation-label">Workspace</p>
-          <ol>
-            {navigation.map((item) => (
-              <li key={item.label}>
-                <a aria-current={item.active ? "page" : undefined} href={item.active ? "#register" : "#"}>
-                  <span className="navigation-marker">{item.marker}</span>
-                  <span>{item.label}</span>
-                </a>
-              </li>
-            ))}
-          </ol>
-        </nav>
-
-        <div className="sidebar-foot">
-          <span className="availability-dot" />
-          <span>Systems available</span>
-        </div>
-      </aside>
-
-      <main className="workspace" id="register">
-        <header className="workspace-header">
+    <WorkspaceShell
+      activeNavigation="case_register"
+      eyebrow="Investigation workspace"
+      reviewCount={activeCases.length}
+      title="Case register"
+      user={user}
+    >
+      <section aria-labelledby="register-title" className="register-panel" id="register">
+        <div className="register-caption">
           <div>
-            <p className="eyebrow">Investigation workspace</p>
-            <h1>Case register</h1>
+            <p className="eyebrow">Active register</p>
+            <h2 id="register-title">Investigations requiring judgment</h2>
           </div>
-          <div className="header-context">
-            <DateStamp />
-            <span aria-label="Zero cases awaiting review" className="review-count">
-              <strong>0</strong> awaiting review
+          <div className="register-tools">
+            <span className="record-count">
+              {activeCases.length} {activeCases.length === 1 ? "record" : "records"}
             </span>
-            <AccountMenu
-              initials={accountInitials(user.username)}
-              role={roleLabel(user.role)}
-              username={user.username}
-            />
+            {activeCases.length > 0 && canImport ? <TransactionIntake /> : null}
           </div>
-        </header>
+        </div>
 
-        <section aria-labelledby="register-title" className="register-panel">
-          <div className="register-caption">
-            <div>
-              <p className="eyebrow">Active register</p>
-              <h2 id="register-title">Investigations requiring judgment</h2>
-            </div>
-            <span className="record-count">0 records</span>
-          </div>
-
+        {activeCases.length > 0 ? (
+          <CaseRegister cases={activeCases} />
+        ) : (
           <div className="empty-register">
             <div className="empty-illustration">
               <RegisterMark />
@@ -104,26 +58,85 @@ export default async function Home() {
             <p className="empty-kicker">The register is clear</p>
             <h3>Nothing needs your judgment yet.</h3>
             <p className="empty-copy">
-              Import a transaction file to begin a traceable review. Every score, explanation, and
-              analyst decision will be preserved in the evidence record.
+              Import a transaction file to begin a traceable review. Medium and high rules-only
+              assessments enter this register; every human action remains part of the evidence record.
             </p>
             <div className="empty-actions">
-              {user.role === "administrator" || user.role === "analyst" ? (
-                <TransactionIntake />
-              ) : null}
+              {canImport ? <TransactionIntake /> : null}
               <a className="text-action" href="#preparation-note">
                 Read the preparation guide <span aria-hidden="true">→</span>
               </a>
             </div>
           </div>
+        )}
 
-          <footer className="register-footer" id="preparation-note">
-            <span>Accepted format: CSV</span>
-            <span>All imports receive a checksum</span>
-            <span>Source files remain immutable</span>
-          </footer>
-        </section>
-      </main>
+        <footer className="register-footer" id="preparation-note">
+          <span>Medium and high risk enter review</span>
+          <span>Rules-only score remains unchanged</span>
+          <span>Analyst classification is human-owned</span>
+        </footer>
+      </section>
+    </WorkspaceShell>
+  );
+}
+
+function CaseRegister({ cases }: { cases: CaseSummary[] }) {
+  return (
+    <div className="case-register-list">
+      <div aria-hidden="true" className="case-register-columns">
+        <span>Reference</span>
+        <span>Transaction</span>
+        <span>Risk evidence</span>
+        <span>Status</span>
+        <span />
+      </div>
+      <ol>
+        {cases.map((item) => (
+          <li key={item.id}>
+            <Link className="case-register-row" href={`/cases/${item.id}`}>
+              <span className="case-reference">
+                <strong>{item.display_id}</strong>
+                <small>{formatDate(item.created_at)}</small>
+              </span>
+              <span className="case-transaction">
+                <strong>{item.transaction.external_transaction_id}</strong>
+                <small>
+                  {formatAmount(item.transaction.amount, item.transaction.currency)} · {item.transaction.account_reference}
+                </small>
+              </span>
+              <span className="case-risk">
+                <span className={`risk-score risk-${item.risk_level}`}>{item.risk_score}</span>
+                <span>
+                  <strong>{item.risk_level} risk</strong>
+                  <small>{item.triggered_rule_count} contributing rules</small>
+                </span>
+              </span>
+              <span className={`case-status status-${item.status}`}>{statusLabel(item.status)}</span>
+              <span aria-hidden="true" className="case-row-arrow">↗</span>
+            </Link>
+          </li>
+        ))}
+      </ol>
     </div>
   );
+}
+
+function formatAmount(amount: string, currency: string) {
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(Number(amount));
+  } catch {
+    return `${currency} ${amount}`;
+  }
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function statusLabel(status: CaseSummary["status"]) {
+  return status === "in_review" ? "In review" : status.charAt(0).toUpperCase() + status.slice(1);
 }
