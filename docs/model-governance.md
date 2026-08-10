@@ -22,6 +22,11 @@ Research-purpose models cannot enter shadow mode. In particular, the ULB/OpenML 
 undisclosed PCA components and is not compatible with the canonical transaction feature contract.
 It may be recorded as research evidence, but the governance service blocks its admission.
 
+The offline candidate-dossier workflow can replay the complete ULB experiment and export an exact
+registration payload. It always marks that payload as research-only, operationally incompatible,
+and not approved as operational training data. See
+[`ml-candidate-dossiers.md`](ml-candidate-dossiers.md).
+
 ## Registration contract
 
 `POST /api/v1/models` accepts immutable metadata including:

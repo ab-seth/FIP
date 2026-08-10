@@ -82,6 +82,10 @@ The executable research-only training and evidence workflow is documented in
 [`docs/ml-research-evidence.md`](docs/ml-research-evidence.md). It does not participate in live
 scoring.
 
+Completed research runs can be independently replayed into checksummed, registry-ready research
+candidate dossiers without deserializing the supplied artifact. See
+[`docs/ml-candidate-dossiers.md`](docs/ml-candidate-dossiers.md).
+
 ## Status
 
 The project is under active MVP development. It must not be used for real customer data, automated financial actions, or production fraud decisions.

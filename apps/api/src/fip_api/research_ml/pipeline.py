@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import platform
@@ -12,10 +11,10 @@ from importlib.metadata import version
 from pathlib import Path
 from typing import Any
 
-import joblib  # type: ignore[import-untyped]
 import numpy as np
 
 from fip_api.research_ml import PIPELINE_VERSION
+from fip_api.research_ml.artifact import sha256_file, write_model_artifact
 from fip_api.research_ml.dataset import ResearchDataset, load_ulb_credit_card
 from fip_api.research_ml.evaluation import evaluate_probabilities
 from fip_api.research_ml.splitting import (
@@ -33,6 +32,7 @@ from fip_api.research_ml.training import (
 
 ULB_SOURCE_PAGE = "https://www.openml.org/d/1597"
 ULB_DOWNLOAD_URL = "https://openml.org/data/v1/download/1673544/creditcard.arff"
+CANDIDATE_DISPLAY_ORDER = ("logistic-regression", "hist-gradient-boosting")
 
 
 @dataclass(frozen=True)
@@ -59,7 +59,7 @@ def run_experiment(config: ExperimentConfig) -> dict[str, Any]:
         raise FileExistsError(config.output_directory)
 
     dataset = load_ulb_credit_card(config.input_path)
-    source_checksum = _sha256_file(config.input_path)
+    source_checksum = sha256_file(config.input_path)
     partitions = build_temporal_partitions(dataset, config.split_fractions)
 
     candidates = train_candidates(
@@ -106,7 +106,7 @@ def run_experiment(config: ExperimentConfig) -> dict[str, Any]:
             "maximum_false_positive_rate": config.maximum_false_positive_rate,
             "split_fractions": asdict(config.split_fractions),
         },
-        "partitions": _partition_summary(dataset, partitions),
+        "partitions": partition_summary(dataset, partitions),
         "candidates": {
             candidate.name: {"validation": candidate.validation_metrics.to_dict()}
             for candidate in candidates
@@ -146,27 +146,17 @@ def _write_run(
             encoding="utf-8",
         )
         artifact_path = temporary_directory / "model.joblib"
-        joblib.dump(
-            {
-                "pipeline_version": PIPELINE_VERSION,
-                "research_only": True,
-                "model_name": selected.name,
-                "estimator": selected.estimator,
-                "calibrator": selected.calibrator,
-                "threshold": selected.threshold,
-            },
-            artifact_path,
-        )
-        model_checksum = _sha256_file(artifact_path)
-        model_card = _build_model_card(result, model_checksum)
+        write_model_artifact(artifact_path, selected)
+        model_checksum = sha256_file(artifact_path)
+        model_card = build_model_card(result, model_checksum)
         (temporary_directory / "model-card.md").write_text(model_card, encoding="utf-8")
         run_manifest = {
             "pipeline_version": PIPELINE_VERSION,
             "research_only": True,
             "files": {
-                "metrics.json": _sha256_file(metrics_path),
+                "metrics.json": sha256_file(metrics_path),
                 "model.joblib": model_checksum,
-                "model-card.md": hashlib.sha256(model_card.encode("utf-8")).hexdigest(),
+                "model-card.md": sha256_file(temporary_directory / "model-card.md"),
             },
         }
         (temporary_directory / "run-manifest.json").write_text(
@@ -179,7 +169,7 @@ def _write_run(
         raise
 
 
-def _partition_summary(
+def partition_summary(
     dataset: ResearchDataset,
     partitions: TemporalPartitions,
 ) -> dict[str, dict[str, float | int]]:
@@ -194,18 +184,21 @@ def _partition_summary(
     return summary
 
 
-def _build_model_card(result: dict[str, Any], model_checksum: str) -> str:
+def build_model_card(result: dict[str, Any], model_checksum: str) -> str:
     dataset = result["dataset"]
     configuration = result["configuration"]
     test = result["test"]
     candidates = result["candidates"]
+    candidate_names = [name for name in CANDIDATE_DISPLAY_ORDER if name in candidates]
+    candidate_names.extend(sorted(set(candidates).difference(candidate_names)))
+    candidate_entries = [(name, candidates[name]) for name in candidate_names]
     candidate_rows = "\n".join(
         (
             f"| {name} | {values['validation']['average_precision']:.6f} | "
             f"{values['validation']['roc_auc']:.6f} | "
             f"{values['validation']['brier_score']:.6f} |"
         )
-        for name, values in candidates.items()
+        for name, values in candidate_entries
     )
     importance_rows = "\n".join(
         (
@@ -287,11 +280,3 @@ human-readable operational reasons.
 reviewed institution-owned label set or a compatible licensed partner dataset, validated canonical
 features, governance approval, and shadow-mode evidence.
 """
-
-
-def _sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
