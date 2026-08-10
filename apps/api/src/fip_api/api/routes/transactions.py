@@ -23,8 +23,10 @@ from fip_api.ingestion.service import (
     receipt_from_batch,
     validation_response,
 )
+from fip_api.model_registry import build_shadow_prediction_response, list_shadow_predictions
 from fip_api.models import RuleRiskLevel, Transaction, User, UserRole
 from fip_api.rules import EVALUATED_RULE_COUNT
+from fip_api.schemas.model_registry import ShadowPredictionResponse
 from fip_api.schemas.risk import (
     FeatureSnapshotResponse,
     RuleAssessmentResponse,
@@ -226,6 +228,24 @@ def get_rule_assessment(
         ),
         created_at=assessment.created_at,
     )
+
+
+@router.get(
+    "/{transaction_id}/shadow-predictions",
+    response_model=list[ShadowPredictionResponse],
+)
+def get_shadow_predictions(
+    transaction_id: str,
+    db: Database,
+    user: AuthenticatedUser,
+) -> list[ShadowPredictionResponse]:
+    del user
+    if db.get(Transaction, transaction_id) is None:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    return [
+        build_shadow_prediction_response(db, prediction)
+        for prediction in list_shadow_predictions(db, transaction_id)
+    ]
 
 
 async def _read_upload(request: Request, max_bytes: int) -> bytes:
