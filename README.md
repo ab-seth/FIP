@@ -73,6 +73,9 @@ make check
 Raw financial datasets are never committed. Dataset adapters, checksums, license metadata, and reproducible preparation commands will be versioned in the repository. FIP uses only legally reusable public data and small generated fixtures for automated tests.
 
 The initial real-data baseline and approval gates are documented in [`data/README.md`](data/README.md).
+The executable research-only training and evidence workflow is documented in
+[`docs/ml-research-evidence.md`](docs/ml-research-evidence.md). It does not participate in live
+scoring.
 
 ## Status
 

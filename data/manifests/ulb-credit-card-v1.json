@@ -1,0 +1,17 @@
+{
+  "dataset_id": "openml-1597-v1",
+  "display_name": "ULB Credit Card Fraud Detection",
+  "source_page": "https://www.openml.org/d/1597",
+  "download_url": "https://openml.org/data/v1/download/1673544/creditcard.arff",
+  "provider_file_id": "1673544",
+  "provider_md5": "178bcf9bb1f31a3dfe12d0e577884add",
+  "provider_license_value": "Public",
+  "provider_license_authority": "OpenML dataset metadata",
+  "provenance": "Real European card transactions collected through a Worldline and ULB research collaboration",
+  "row_count": 284807,
+  "positive_label_count": 492,
+  "access_status": "approved_for_research_methodology",
+  "operational_feature_compatible": false,
+  "operational_block_reason": "V1 through V28 are undisclosed PCA features that cannot be recreated from the FIP canonical transaction schema",
+  "raw_data_committed": false
+}

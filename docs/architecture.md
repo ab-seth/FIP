@@ -50,6 +50,18 @@ assessment. Public research datasets and their anonymized fields are excluded fr
 path. The contract and limitations are documented in
 [`semantic-risk-rules.md`](semantic-risk-rules.md).
 
+## Research ML boundary
+
+Research dataset loading, temporal splitting, model training, calibration, evaluation, artifact
+checksums, and model-card generation live under `fip_api.research_ml`. This package has no import or
+dependency edge from the API router, ingestion service, or operational scoring service. Its public
+datasets use source-specific features and cannot register an operational model.
+
+The first executable benchmark uses real ULB/OpenML transactions to validate methodology. It does
+not demonstrate production efficacy because most features are undisclosed PCA components. The
+dataset decision and promotion gate are documented in
+[`ml-research-evidence.md`](ml-research-evidence.md).
+
 ## Design system
 
 The approved frontend direction is **Forensic Ledger**: a warm archival canvas, white evidence surfaces, compact navigation, editorial case hierarchy, and restrained risk accents. LLM output is presented as a cited case brief rather than a chat interface.
