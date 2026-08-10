@@ -5,6 +5,7 @@ from fip_api.models.model_registry import (
     ModelPurpose,
     ModelRuntimeContract,
     RegisteredModel,
+    ShadowModelEvaluationReport,
     ShadowModelPrediction,
 )
 from fip_api.models.risk import (
@@ -30,11 +31,12 @@ __all__ = [
     "ModelRuntimeContract",
     "RegisteredModel",
     "RuleRiskLevel",
+    "ShadowModelEvaluationReport",
+    "ShadowModelPrediction",
     "Transaction",
     "TransactionChannel",
     "TransactionFeatureSnapshot",
     "TransactionRuleAssessment",
-    "ShadowModelPrediction",
     "User",
     "UserRole",
 ]

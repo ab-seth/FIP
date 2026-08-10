@@ -22,6 +22,11 @@ shadow model metadata under role and compatibility gates. Recorded shadow output
 `GET /api/v1/transactions/{transaction_id}/shadow-predictions`; they never alter rule assessments.
 See [`../../docs/model-governance.md`](../../docs/model-governance.md).
 
+Evaluators can create immutable comparison reports with
+`POST /api/v1/models/{model_id}/evaluations`; authenticated users can read them from the matching GET
+endpoint. Drift, latency, rules-comparison, integrity, and claims boundaries are documented in
+[`../../docs/shadow-model-evaluation.md`](../../docs/shadow-model-evaluation.md).
+
 The offline `fip-research-verify-candidate` command re-trains a completed public-dataset experiment,
 verifies its source evidence, and exports a fresh checksummed artifact bundle with a research-only
 registry payload. It does not call the API or promote a lifecycle. See

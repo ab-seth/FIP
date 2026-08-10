@@ -27,6 +27,10 @@ after independent evaluator approval, produce immutable shadow-only predictions.
 changes the rules-only score or triggers a financial action. The gates and tamper-evident lineage are
 documented in [`docs/model-governance.md`](docs/model-governance.md).
 
+Verified shadow predictions can be summarized into immutable baseline-versus-evaluation drift and
+latency reports. Reports are monitoring evidence only and cannot change lifecycle or transaction
+state. See [`docs/shadow-model-evaluation.md`](docs/shadow-model-evaluation.md).
+
 ## Prerequisites
 
 - Node.js 24+

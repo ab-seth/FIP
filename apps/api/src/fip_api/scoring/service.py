@@ -113,6 +113,30 @@ def find_current_rule_assessment(
     return snapshot, assessment
 
 
+def verify_rule_assessment_integrity(
+    snapshot: TransactionFeatureSnapshot,
+    assessment: TransactionRuleAssessment,
+    transaction: Transaction,
+) -> bool:
+    expected_checksum = canonical_json_checksum(
+        {
+            "feature_snapshot_checksum": snapshot.snapshot_checksum,
+            "risk_band_version": assessment.risk_band_version,
+            "risk_level": assessment.risk_level,
+            "rule_score": assessment.rule_score,
+            "ruleset_version": assessment.ruleset_version,
+            "external_transaction_id": transaction.external_transaction_id,
+            "triggered_rules": assessment.triggered_rules,
+        }
+    )
+    return (
+        assessment.transaction_id == transaction.id
+        and assessment.feature_snapshot_id == snapshot.id
+        and snapshot.transaction_id == transaction.id
+        and expected_checksum == assessment.assessment_checksum
+    )
+
+
 def backfill_rule_assessments(db: Session) -> int:
     created = 0
     transactions = db.scalars(
