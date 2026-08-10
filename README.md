@@ -36,6 +36,11 @@ notes and one final classification in a tamper-evident ledger; independent evalu
 whether a binary outcome is eligible for a future ML dataset. No feedback-driven training occurs in
 this workflow. See [`docs/investigation-cases.md`](docs/investigation-cases.md).
 
+Independently approved binary outcomes can be frozen into immutable operational dataset snapshots.
+Snapshots exclude direct identifiers, use chronological partitions, expose explicit readiness
+gates, and re-verify every source and row checksum. A snapshot never starts training. See
+[`docs/operational-ml-datasets.md`](docs/operational-ml-datasets.md).
+
 ## Prerequisites
 
 - Node.js 24+

@@ -104,6 +104,19 @@ training-eligible, and no cases dependency reaches into training, model registra
 prediction, lifecycle transition, or transaction action code. See
 [`investigation-cases.md`](investigation-cases.md).
 
+## Operational ML dataset boundary
+
+The `training_datasets` module reads independently approved binary case outcomes and their pinned
+pre-decision feature snapshots. It exports only an explicit, identifier-free semantic feature
+allow-list, assigns deterministic chronological partitions, evaluates fixed readiness gates, and
+stores immutable checksummed dataset rows and manifests.
+
+This is a one-way dependency: dataset curation may read case evidence, while the cases, ingestion,
+scoring, and transaction modules never call dataset creation or training. A blocked snapshot is
+valid evidence of insufficient or imbalanced labels; it cannot be represented as training-ready.
+No training or model lifecycle action is triggered. See
+[`operational-ml-datasets.md`](operational-ml-datasets.md).
+
 ## Design system
 
 The approved frontend direction is **Forensic Ledger**: a warm archival canvas, white evidence surfaces, compact navigation, editorial case hierarchy, and restrained risk accents. LLM output is presented as a cited case brief rather than a chat interface.

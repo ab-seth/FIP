@@ -24,6 +24,12 @@ from fip_api.models.risk import (
     TransactionFeatureSnapshot,
     TransactionRuleAssessment,
 )
+from fip_api.models.training_dataset import (
+    DatasetReadinessStatus,
+    DatasetSplit,
+    OperationalDatasetRow,
+    OperationalDatasetSnapshot,
+)
 from fip_api.models.transaction import (
     IngestionBatch,
     IngestionSourceType,
@@ -41,6 +47,8 @@ __all__ = [
     "CaseOutcomeReview",
     "CasePriority",
     "CaseStatus",
+    "DatasetReadinessStatus",
+    "DatasetSplit",
     "IngestionBatch",
     "IngestionSourceType",
     "ModelKind",
@@ -49,6 +57,8 @@ __all__ = [
     "ModelPurpose",
     "ModelRuntimeContract",
     "OutcomeReviewStatus",
+    "OperationalDatasetRow",
+    "OperationalDatasetSnapshot",
     "RegisteredModel",
     "RuleRiskLevel",
     "ShadowModelEvaluationReport",
