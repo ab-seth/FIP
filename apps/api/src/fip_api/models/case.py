@@ -37,6 +37,7 @@ class CaseEventType(StrEnum):
     NOTE_ADDED = "note_added"
     CLASSIFIED = "classified"
     OUTCOME_REVIEWED = "outcome_reviewed"
+    BRIEF_GENERATED = "brief_generated"
 
 
 class CaseClassification(StrEnum):
@@ -85,7 +86,7 @@ class CaseEvent(Base):
     __table_args__ = (
         CheckConstraint(
             "event_type IN ('opened', 'review_started', 'note_added', "
-            "'classified', 'outcome_reviewed')",
+            "'classified', 'outcome_reviewed', 'brief_generated')",
             name="ck_case_events_type",
         ),
         CheckConstraint("sequence_number > 0", name="ck_case_events_sequence_positive"),

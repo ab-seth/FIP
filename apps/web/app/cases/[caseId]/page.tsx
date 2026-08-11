@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth/server";
 import { getCase, getCases } from "@/lib/cases/server";
 
 import { CaseActions } from "../../components/case-actions";
+import { GroundedCaseBrief } from "../../components/case-brief";
 import { WorkspaceShell } from "../../components/workspace-shell";
 
 export default async function CaseDossierPage({
@@ -85,6 +86,13 @@ export default async function CaseDossierPage({
                 ))}
               </ol>
             </section>
+
+            <GroundedCaseBrief
+              caseBriefs={caseDetail.case_briefs}
+              caseId={caseDetail.id}
+              hybridAssessments={caseDetail.hybrid_assessments}
+              role={user.role}
+            />
 
             {caseDetail.outcome ? <OutcomeRecord caseDetail={caseDetail} /> : null}
 
@@ -166,6 +174,7 @@ function eventLabel(event: CaseEvent) {
     note_added: "Analyst note added",
     classified: "Final classification recorded",
     outcome_reviewed: "Outcome label reviewed",
+    brief_generated: "Grounded case brief generated",
   };
   return labels[event.event_type];
 }
@@ -176,6 +185,9 @@ function eventDescription(event: CaseEvent) {
   if (event.event_type === "review_started") return String(payload.reason ?? "Review started.");
   if (event.event_type === "classified") return `${humanize(String(payload.classification ?? ""))}: ${String(payload.rationale ?? "")}`;
   if (event.event_type === "outcome_reviewed") return `${humanize(String(payload.status ?? ""))}: ${String(payload.reason ?? "")}`;
+  if (event.event_type === "brief_generated") {
+    return `${humanize(String(payload.generation_mode ?? ""))} · ${String(payload.provider_name ?? "versioned explanation")}`;
+  }
   return String(payload.opening_reason ?? "Risk evidence met the review threshold.");
 }
 

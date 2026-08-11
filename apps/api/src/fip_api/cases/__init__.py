@@ -8,6 +8,7 @@ from fip_api.cases.service import (
     classify_case,
     list_cases,
     open_case_for_assessment,
+    record_case_brief_event,
     review_case_outcome,
     start_case_review,
     verify_case_integrity,
@@ -24,6 +25,7 @@ __all__ = [
     "list_cases",
     "open_case_for_assessment",
     "review_case_outcome",
+    "record_case_brief_event",
     "start_case_review",
     "verify_case_integrity",
 ]

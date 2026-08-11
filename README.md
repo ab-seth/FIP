@@ -41,6 +41,12 @@ supervised and anomaly shadow predictions under the versioned 20/60/20 policy. I
 lineage and contributions, fails closed on missing or damaged inputs, and cannot change case or
 transaction state. See [`docs/hybrid-risk-evidence.md`](docs/hybrid-risk-evidence.md).
 
+Analysts can generate an immutable, cited case brief from the verified rules evidence and, when
+explicitly selected, one verified hybrid assessment. Provider output is schema-checked and
+fact-checked before display; unavailable or ungrounded output becomes a clearly labeled
+deterministic fallback. The LLM cannot change scores, classifications, or financial state. See
+[`docs/grounded-case-briefs.md`](docs/grounded-case-briefs.md).
+
 Medium and high deterministic assessments now open a human investigation case. Analysts can record
 notes and one final classification in a tamper-evident ledger; independent evaluators control
 whether a binary outcome is eligible for a future ML dataset. No feedback-driven training occurs in

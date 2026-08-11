@@ -48,6 +48,12 @@ start, notes, one final human classification, an append-only hash chain, and ind
 future-training-label review. See
 [`../../docs/investigation-cases.md`](../../docs/investigation-cases.md).
 
+Administrators and analysts can create a cited explanation with
+`POST /api/v1/cases/{case_id}/briefs`; all authenticated roles can read the immutable versions. The
+provider-neutral JSON adapter, deterministic grounding validation, fallback behavior, audit record,
+and non-intervention controls are documented in
+[`../../docs/grounded-case-briefs.md`](../../docs/grounded-case-briefs.md).
+
 `GET /api/v1/ml/datasets/readiness` exposes approved-label, integrity, class-balance, temporal, and
 holdout gates. Administrators can freeze those sources with `POST /api/v1/ml/datasets/snapshots`;
 the result excludes direct identifiers, is immutable checksummed evidence, and does not trigger training. See

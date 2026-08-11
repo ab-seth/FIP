@@ -99,6 +99,20 @@ project matching hybrid evidence read-only, but hybrid creation cannot append a 
 case state. See
 [`hybrid-risk-evidence.md`](hybrid-risk-evidence.md).
 
+## Grounded explanation boundary
+
+The `explainability` module assembles an identifier-minimized evidence catalog from one case's pinned
+rules evidence and, only when explicitly requested, one verified hybrid assessment. It checksums the
+catalog and sends it through a provider-neutral JSON adapter under a server-owned, versioned prompt.
+The provider has no database, scoring, case mutation, model lifecycle, training, or financial-action
+interface.
+
+Strict structured-output validation runs before display. Exact evidence references are required,
+numerical claims must occur in their cited entries, and prohibited conclusions or consequential
+actions fail validation. Failure selects a deterministic brief without interrupting scoring or case
+review. Each result is immutable, independently re-verifiable, and recorded as a hash-linked case
+event. See [`grounded-case-briefs.md`](grounded-case-briefs.md).
+
 ## Shadow evaluation boundary
 
 The `model_evaluation` module reads immutable shadow predictions, canonical feature snapshots,
