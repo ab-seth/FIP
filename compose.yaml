@@ -29,11 +29,15 @@ services:
       FIP_LOGIN_LOCK_MINUTES: ${FIP_LOGIN_LOCK_MINUTES:-15}
       FIP_TRANSACTION_UPLOAD_MAX_BYTES: ${FIP_TRANSACTION_UPLOAD_MAX_BYTES:-10485760}
       FIP_TRANSACTION_UPLOAD_MAX_ROWS: ${FIP_TRANSACTION_UPLOAD_MAX_ROWS:-10000}
+      FIP_MODEL_ARTIFACT_ROOT: ${FIP_MODEL_ARTIFACT_ROOT:-/var/lib/fip/model-artifacts}
+      FIP_MODEL_ARTIFACT_MAX_BYTES: ${FIP_MODEL_ARTIFACT_MAX_BYTES:-268435456}
       FIP_BOOTSTRAP_ADMIN_USERNAME: ${FIP_BOOTSTRAP_ADMIN_USERNAME:-admin}
       FIP_BOOTSTRAP_ADMIN_PASSWORD: ${FIP_BOOTSTRAP_ADMIN_PASSWORD:-admin-change-me}
     command: ["sh", "-c", "alembic upgrade head && python -m fip_api.bootstrap && uvicorn fip_api.main:app --host 0.0.0.0 --port 8000"]
     ports:
       - "8000:8000"
+    volumes:
+      - fip_model_artifacts:/var/lib/fip/model-artifacts
     depends_on:
       db:
         condition: service_healthy
@@ -57,4 +61,5 @@ services:
         condition: service_healthy
 
 volumes:
+  fip_model_artifacts:
   fip_postgres_data:

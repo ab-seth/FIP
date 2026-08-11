@@ -101,7 +101,8 @@ passed the dataset workflow.
 - Minimum dataset readiness counts are admission safeguards, not proof of statistical sufficiency.
 - Calibration, threshold behavior, subgroup performance, drift, and analyst capacity require human
   review against the actual institution and time period.
-- Serialized artifacts must be stored and distributed through a trusted artifact channel before a
-  shadow runtime can use them.
-- The next implementation gate is a trusted, checksum-verifying shadow runtime for explicitly
-  registered and evaluator-authorized artifacts; live decision use remains out of scope.
+- Serialized artifacts must pass the privileged, checksum-verifying installation workflow described
+  in [`trusted-shadow-runtime.md`](trusted-shadow-runtime.md).
+- The trusted runtime can now create shadow-only predictions for explicitly registered and
+  evaluator-authorized artifacts. Hybrid decision evidence and live decision use remain separate,
+  later governance gates.

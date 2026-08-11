@@ -31,6 +31,11 @@ Verified shadow predictions can be summarized into immutable baseline-versus-eva
 latency reports. Reports are monitoring evidence only and cannot change lifecycle or transaction
 state. See [`docs/shadow-model-evaluation.md`](docs/shadow-model-evaluation.md).
 
+Registered operational artifacts can be installed into a content-addressed store and executed only
+after checksum verification and independent evaluator shadow admission. The operator-triggered
+runtime records immutable ML predictions and local semantic factors without changing case decisions.
+See [`docs/trusted-shadow-runtime.md`](docs/trusted-shadow-runtime.md).
+
 Medium and high deterministic assessments now open a human investigation case. Analysts can record
 notes and one final classification in a tamper-evident ledger; independent evaluators control
 whether a binary outcome is eligible for a future ML dataset. No feedback-driven training occurs in

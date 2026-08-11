@@ -227,10 +227,13 @@ source = { editable = "." }
 dependencies = [
     { name = "alembic" },
     { name = "fastapi" },
+    { name = "joblib" },
+    { name = "numpy" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pwdlib", extra = ["argon2"] },
     { name = "pydantic-settings" },
     { name = "pyjwt" },
+    { name = "scikit-learn" },
     { name = "sqlalchemy" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -258,10 +261,13 @@ training = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.19.0,<2.0" },
     { name = "fastapi", specifier = ">=0.141.1,<1.0" },
+    { name = "joblib", specifier = ">=1.5.3,<2.0" },
+    { name = "numpy", specifier = ">=2.4.2,<3.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.4,<4.0" },
     { name = "pwdlib", extras = ["argon2"], specifier = ">=0.3.0,<1.0" },
     { name = "pydantic-settings", specifier = ">=2.14.2,<3.0" },
     { name = "pyjwt", specifier = ">=2.13.0,<3.0" },
+    { name = "scikit-learn", specifier = ">=1.8.0,<2.0" },
     { name = "sqlalchemy", specifier = ">=2.0.51,<3.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.52.1,<1.0" },
 ]

@@ -96,6 +96,14 @@ class ModelRegistrationResponse(BaseModel):
     model: RegisteredModelResponse
 
 
+class ModelArtifactInstallationResponse(BaseModel):
+    model_id: str
+    artifact_sha256: str
+    size_bytes: int
+    installed: bool
+    integrity_verified: bool = True
+
+
 class ShadowFactorResponse(BaseModel):
     feature: str
     contribution: str
@@ -122,3 +130,30 @@ class ShadowPredictionResponse(BaseModel):
     shadow_only: bool = True
     affects_operational_score: bool = False
     created_at: datetime
+
+
+class ShadowRunCreate(BaseModel):
+    transaction_ids: list[str] | None = Field(default=None, min_length=1, max_length=1_000)
+    limit: int = Field(default=100, ge=1, le=1_000)
+
+    @field_validator("transaction_ids")
+    @classmethod
+    def validate_unique_transaction_ids(cls, value: list[str] | None) -> list[str] | None:
+        if value is None:
+            return None
+        normalized = [transaction_id.strip() for transaction_id in value]
+        if any(not transaction_id for transaction_id in normalized):
+            raise ValueError("Transaction identifiers cannot be empty.")
+        if len(set(normalized)) != len(normalized):
+            raise ValueError("Transaction identifiers must be unique.")
+        return normalized
+
+
+class ShadowRunResponse(BaseModel):
+    model_id: str
+    selected_count: int
+    created_count: int
+    replayed_count: int
+    shadow_only: bool = True
+    affects_operational_score: bool = False
+    predictions: list[ShadowPredictionResponse]

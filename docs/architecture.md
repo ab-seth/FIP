@@ -75,11 +75,13 @@ administrator may register a candidate, but a different evaluator must authorize
 mode. Research-purpose, unapproved-data, source-incompatible, wrong-feature-version, and
 insufficiently evaluated models are blocked.
 
-A trusted internal runtime may record an immutable shadow output only when its artifact checksum,
-feature version, and runtime contract match the registration. Shadow predictions reference the
-exact feature snapshot and authorization event and cannot modify the deterministic rule assessment.
-There is no production-active state or external score-submission endpoint. The complete contract is
-documented in [`model-governance.md`](model-governance.md).
+The `model_runtime` module installs administrator-supplied bytes into a content-addressed store only
+after matching the immutable registered checksum. A shadow run re-hashes the open file before
+deserialization and verifies its class, model kind, feature version, training dataset, threshold,
+and runtime contract. It then scores only the operational feature allow-list and delegates immutable
+recording to the shadow ledger. Predictions reference the exact feature snapshot and authorization
+event and cannot modify the deterministic rule assessment. There is no production-active state or
+external score-submission endpoint. See [`trusted-shadow-runtime.md`](trusted-shadow-runtime.md).
 
 ## Shadow evaluation boundary
 
