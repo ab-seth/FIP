@@ -32,7 +32,7 @@ def validate_case_brief_output(
     try:
         output = CaseBriefOutput.model_validate(candidate)
     except ValidationError as exc:
-        failures = [
+        schema_failures = [
             GroundingFailureResponse(
                 code="schema_invalid",
                 location=".".join(str(part) for part in error["loc"]),
@@ -46,7 +46,7 @@ def validate_case_brief_output(
             numerical_claims_valid=False,
             prohibited_actions_absent=False,
             grounding_passed=False,
-            failures=failures,
+            failures=schema_failures,
         )
 
     failures: list[GroundingFailureResponse] = []
