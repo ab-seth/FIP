@@ -26,6 +26,7 @@ from fip_api.models.risk import (
     TransactionFeatureSnapshot,
     TransactionRuleAssessment,
 )
+from fip_api.models.system_evaluation import ScoringRuntimeObservation
 from fip_api.models.training_dataset import (
     DatasetReadinessStatus,
     DatasetSplit,
@@ -65,6 +66,7 @@ __all__ = [
     "OperationalDatasetSnapshot",
     "RegisteredModel",
     "RuleRiskLevel",
+    "ScoringRuntimeObservation",
     "ShadowModelEvaluationReport",
     "ShadowModelPrediction",
     "Transaction",

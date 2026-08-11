@@ -260,6 +260,25 @@ def test_shadow_evaluation_is_replay_safe_and_detects_drift_and_tampering(
     assert listed.json()[0]["report_checksum"] == report["report_checksum"]
     assert db_session.scalar(select(func.count()).select_from(ShadowModelEvaluationReport)) == 1
 
+    system_record = client.get("/api/v1/evaluation/record", headers=evaluator_headers)
+    assert system_record.status_code == 200
+    assert system_record.json()["model_evidence"] == {
+        "registered_models": 1,
+        "verified_model_lineages": 1,
+        "shadow_predictions": 40,
+        "hybrid_assessments": 0,
+        "shadow_evaluation_reports": 1,
+        "verified_shadow_evaluation_reports": 1,
+    }
+    assert system_record.json()["latest_model_evaluations"][0]["id"] == report["id"]
+    assert system_record.json()["latest_model_evaluations"][0]["integrity_verified"] is True
+    model_gate = next(
+        gate
+        for gate in system_record.json()["gates"]
+        if gate["gate"] == "reproducible_model_evaluation"
+    )
+    assert model_gate["status"] == "passed"
+
     prediction = db_session.scalar(
         select(ShadowModelPrediction).order_by(ShadowModelPrediction.created_at)
     )

@@ -122,6 +122,20 @@ alerts. Rules/model disagreement is explicitly comparison evidence rather than a
 measure. Metric definitions and initial drift heuristics are documented in
 [`shadow-model-evaluation.md`](shadow-model-evaluation.md).
 
+## System evaluation record boundary
+
+The `system_evaluation` module is a read-only projection over existing domain evidence. It reads
+transaction and case counts, checksum-protected scoring-runtime observations, case-brief validation,
+model and hybrid lineages, dataset manifests, and immutable shadow-evaluation reports. It has no
+write service and no dependency edge into ingestion, scoring execution, case mutation, model
+lifecycle, training, or financial actions.
+
+Only new deterministic assessments create runtime observations, inside the scoring transaction.
+Historical timing is not reconstructed. The aggregate service re-verifies supported material
+records, excludes damaged timing observations from latency statistics, assigns explicit
+`not_observed` and `not_demonstrated` states, and checksums the versioned response. See
+[`system-evaluation-record.md`](system-evaluation-record.md).
+
 ## Investigation case boundary
 
 The `cases` module converts medium and high deterministic assessments into a human review queue. A

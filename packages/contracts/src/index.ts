@@ -359,3 +359,133 @@ export interface DatasetSnapshotCreateResponse {
   created: boolean;
   dataset: OperationalDatasetDetail;
 }
+
+export type EvaluationGateStatus =
+  | "passed"
+  | "failed"
+  | "not_observed"
+  | "not_demonstrated";
+
+export interface EvaluationGate {
+  gate: string;
+  status: EvaluationGateStatus;
+  observed: string | number | boolean | null;
+  target: string;
+  detail: string;
+}
+
+export interface LatencySummary {
+  observation_count: number;
+  mean_milliseconds: string | null;
+  p95_milliseconds: string | null;
+  maximum_milliseconds: number | null;
+  target_milliseconds: number;
+  status: EvaluationGateStatus;
+}
+
+export interface EvaluationVolume {
+  transactions: number;
+  rule_assessments: number;
+  low_risk: number;
+  medium_risk: number;
+  high_risk: number;
+  cases: number;
+  open_cases: number;
+  in_review_cases: number;
+  classified_cases: number;
+  confirmed_fraud: number;
+  legitimate: number;
+  inconclusive: number;
+}
+
+export interface ExplanationEvaluation {
+  total_briefs: number;
+  validated_llm_briefs: number;
+  deterministic_fallbacks: number;
+  fallback_rate: string | null;
+  provider_candidate_grounding_failures: number;
+  displayed_grounding_failures: number;
+  fallback_reasons: Record<string, number>;
+  llm_latency: LatencySummary;
+}
+
+export interface ModelEvidence {
+  registered_models: number;
+  verified_model_lineages: number;
+  shadow_predictions: number;
+  hybrid_assessments: number;
+  shadow_evaluation_reports: number;
+  verified_shadow_evaluation_reports: number;
+}
+
+export interface IntegritySummary {
+  case_events: number;
+  case_records: number;
+  case_integrity_failures: number;
+  model_records: number;
+  model_integrity_failures: number;
+  case_brief_records: number;
+  case_brief_integrity_failures: number;
+  hybrid_records: number;
+  hybrid_integrity_failures: number;
+  dataset_records: number;
+  dataset_integrity_failures: number;
+  evaluation_report_records: number;
+  evaluation_report_integrity_failures: number;
+  scoring_observation_records: number;
+  scoring_observation_integrity_failures: number;
+}
+
+export interface VersionLineage {
+  feature_set: string;
+  ruleset: string;
+  risk_bands: string;
+  scoring_runtime_observation: string;
+  shadow_output: string;
+  hybrid_policy: string;
+  case_brief_prompt: string;
+  case_brief_output: string;
+  model_evaluation_report: string;
+  label_contract: string;
+  split_contract: string;
+}
+
+export interface ShadowEvaluationReport {
+  id: string;
+  model_id: string;
+  model_key: string;
+  model_version: string;
+  report_schema_version: string;
+  baseline_window_start: string;
+  baseline_window_end: string;
+  evaluation_window_start: string;
+  evaluation_window_end: string;
+  baseline_prediction_count: number;
+  evaluation_prediction_count: number;
+  metrics: Record<string, unknown>;
+  input_lineage_checksum: string;
+  report_checksum: string;
+  requested_by: string;
+  integrity_verified: boolean;
+  monitoring_only: true;
+  affects_operational_score: false;
+  triggers_automatic_action: false;
+  created_at: string;
+}
+
+export interface SystemEvaluationRecord {
+  schema_version: string;
+  evidence_as_of: string | null;
+  overall_status: "passed" | "attention" | "evidence_pending";
+  volume: EvaluationVolume;
+  scoring_latency: LatencySummary;
+  explanations: ExplanationEvaluation;
+  model_evidence: ModelEvidence;
+  integrity: IntegritySummary;
+  versions: VersionLineage;
+  gates: EvaluationGate[];
+  latest_model_evaluations: ShadowEvaluationReport[];
+  snapshot_checksum: string;
+  read_only: true;
+  changes_operational_state: false;
+}
