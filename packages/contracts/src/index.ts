@@ -612,3 +612,54 @@ export interface SystemEvaluationRecord {
   read_only: true;
   changes_operational_state: false;
 }
+
+export type AuditCategory =
+  | "case"
+  | "model"
+  | "scoring"
+  | "explanation"
+  | "hybrid"
+  | "dataset"
+  | "evaluation";
+
+export type AuditIntegrityFilter = "all" | "verified" | "failed";
+
+export interface AuditLedgerEntry {
+  id: string;
+  category: AuditCategory;
+  action: string;
+  subject_id: string;
+  subject_label: string;
+  actor_username: string;
+  detail: string;
+  sequence_number: number | null;
+  occurred_at: string;
+  checksum: string;
+  previous_checksum: string | null;
+  integrity_verified: boolean;
+  href: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface AuditLedgerSummary {
+  total_records: number;
+  verified_records: number;
+  failed_records: number;
+  chained_records: number;
+  category_counts: Partial<Record<AuditCategory, number>>;
+}
+
+export interface AuditLedger {
+  schema_version: string;
+  entries: AuditLedgerEntry[];
+  summary: AuditLedgerSummary;
+  total: number;
+  page: number;
+  page_size: number;
+  page_count: number;
+  category: AuditCategory | null;
+  integrity: AuditIntegrityFilter;
+  query: string | null;
+  read_only: true;
+  changes_operational_state: false;
+}

@@ -25,7 +25,7 @@ const navigation: Array<{
     key: "audit_ledger",
     label: "Audit ledger",
     marker: "03",
-    href: "/evaluation#integrity-ledger",
+    href: "/audit",
   },
   { key: "ml_datasets", label: "ML datasets", marker: "04", href: "/ml/datasets" },
   { key: "ml_models", label: "Model operations", marker: "05", href: "/ml/models" },

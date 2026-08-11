@@ -160,7 +160,7 @@ function GateRecord({ gate, index }: { gate: DatasetReadinessGate; index: number
 
 function DatasetArchive({ datasets }: { datasets: OperationalDatasetSummary[] }) {
   return (
-    <section className="dataset-archive">
+    <section className="dataset-archive" id="dataset-archive">
       <header>
         <div>
           <p className="eyebrow">Immutable archive</p>

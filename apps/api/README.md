@@ -53,6 +53,11 @@ latency, environment volume, grounding behavior, model evidence, integrity findi
 lineage, and latest model reports without changing operational state. See
 [`../../docs/system-evaluation-record.md`](../../docs/system-evaluation-record.md).
 
+`GET /api/v1/audit/ledger` exposes a filtered, paginated read-only projection of material case,
+model, scoring, explanation, hybrid, dataset, and evaluation records. It reuses each owning module's
+integrity verifier and never repairs or duplicates source evidence. See
+[`../../docs/audit-ledger.md`](../../docs/audit-ledger.md).
+
 Medium and high deterministic assessments open investigation cases. The case API supports review
 start, notes, one final human classification, an append-only hash chain, and independent
 future-training-label review. See
