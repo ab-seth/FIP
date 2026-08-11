@@ -36,6 +36,11 @@ after checksum verification and independent evaluator shadow admission. The oper
 runtime records immutable ML predictions and local semantic factors without changing case decisions.
 See [`docs/trusted-shadow-runtime.md`](docs/trusted-shadow-runtime.md).
 
+A governed hybrid evidence service can combine one verified rule assessment with explicit
+supervised and anomaly shadow predictions under the versioned 20/60/20 policy. It preserves exact
+lineage and contributions, fails closed on missing or damaged inputs, and cannot change case or
+transaction state. See [`docs/hybrid-risk-evidence.md`](docs/hybrid-risk-evidence.md).
+
 Medium and high deterministic assessments now open a human investigation case. Analysts can record
 notes and one final classification in a tamper-evident ledger; independent evaluators control
 whether a binary outcome is eligible for a future ML dataset. No feedback-driven training occurs in

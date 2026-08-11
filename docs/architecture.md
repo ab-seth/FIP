@@ -83,6 +83,22 @@ recording to the shadow ledger. Predictions reference the exact feature snapshot
 event and cannot modify the deterministic rule assessment. There is no production-active state or
 external score-submission endpoint. See [`trusted-shadow-runtime.md`](trusted-shadow-runtime.md).
 
+## Hybrid risk evidence boundary
+
+The `hybrid_scoring` module reads a current verified rule assessment and two explicitly selected,
+verified shadow predictions: one supervised and one anomaly. All three inputs must reference the
+same immutable feature snapshot. The module applies a server-owned versioned policy, records exact
+component contributions and upstream checksums, and exposes an independently verifiable combined
+assessment.
+
+Dependency direction is read-only toward rules, feature snapshots, the model registry, and the
+shadow ledger. There is no dependency edge from hybrid scoring into ingestion, case mutation,
+transaction action, lifecycle transition, model execution, training, or LLM generation. Missing,
+mismatched, or damaged inputs block combination rather than changing weights. Case detail may
+project matching hybrid evidence read-only, but hybrid creation cannot append a case event or alter
+case state. See
+[`hybrid-risk-evidence.md`](hybrid-risk-evidence.md).
+
 ## Shadow evaluation boundary
 
 The `model_evaluation` module reads immutable shadow predictions, canonical feature snapshots,

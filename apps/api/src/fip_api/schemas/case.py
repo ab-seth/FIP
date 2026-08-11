@@ -13,6 +13,7 @@ from fip_api.models import (
     OutcomeReviewStatus,
     RuleRiskLevel,
 )
+from fip_api.schemas.hybrid_risk import HybridRiskAssessmentResponse
 
 
 class CaseReviewStart(BaseModel):
@@ -123,4 +124,5 @@ class CaseSummaryResponse(BaseModel):
 class CaseDetailResponse(CaseSummaryResponse):
     opening_reason: str
     evidence: CaseRuleEvidenceResponse
+    hybrid_assessments: list[HybridRiskAssessmentResponse]
     events: list[CaseEventResponse]
