@@ -43,6 +43,12 @@ Evaluators can create immutable comparison reports with
 endpoint. Drift, latency, rules-comparison, integrity, and claims boundaries are documented in
 [`../../docs/shadow-model-evaluation.md`](../../docs/shadow-model-evaluation.md).
 
+`GET /api/v1/evaluation/record` and its system-design alias `GET /api/v1/metrics` expose the same
+authenticated, read-only system evidence snapshot. The response aggregates observed scoring and LLM
+latency, environment volume, grounding behavior, model evidence, integrity findings, version
+lineage, and latest model reports without changing operational state. See
+[`../../docs/system-evaluation-record.md`](../../docs/system-evaluation-record.md).
+
 Medium and high deterministic assessments open investigation cases. The case API supports review
 start, notes, one final human classification, an append-only hash chain, and independent
 future-training-label review. See

@@ -19,10 +19,15 @@ const navigation: Array<{
   href: string;
 }> = [
   { key: "case_register", label: "Case register", marker: "01", href: "/" },
-  { key: "case_dossiers", label: "Case dossiers", marker: "02", href: "#dossier" },
-  { key: "audit_ledger", label: "Audit ledger", marker: "03", href: "#audit-ledger" },
+  { key: "case_dossiers", label: "Case dossiers", marker: "02", href: "/cases" },
+  {
+    key: "audit_ledger",
+    label: "Audit ledger",
+    marker: "03",
+    href: "/evaluation#integrity-ledger",
+  },
   { key: "ml_datasets", label: "ML datasets", marker: "04", href: "/ml/datasets" },
-  { key: "evaluation_record", label: "Evaluation record", marker: "05", href: "#evaluation-record" },
+  { key: "evaluation_record", label: "Evaluation record", marker: "05", href: "/evaluation" },
 ];
 
 export function WorkspaceShell({
@@ -55,13 +60,7 @@ export function WorkspaceShell({
               <li key={item.key}>
                 <Link
                   aria-current={item.key === activeNavigation ? "page" : undefined}
-                  href={
-                    item.key === "case_register" ||
-                    item.key === "ml_datasets" ||
-                    item.key === activeNavigation
-                      ? item.href
-                      : "#"
-                  }
+                  href={item.href}
                 >
                   <span className="navigation-marker">{item.marker}</span>
                   <span>{item.label}</span>

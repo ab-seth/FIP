@@ -164,6 +164,20 @@ def list_shadow_evaluations(
     )
 
 
+def list_all_shadow_evaluations(
+    db: Session,
+    *,
+    limit: int | None = None,
+) -> list[ShadowModelEvaluationReport]:
+    statement = select(ShadowModelEvaluationReport).order_by(
+        ShadowModelEvaluationReport.created_at.desc(),
+        ShadowModelEvaluationReport.id,
+    )
+    if limit is not None:
+        statement = statement.limit(limit)
+    return list(db.scalars(statement).all())
+
+
 def build_evaluation_response(
     db: Session,
     report: ShadowModelEvaluationReport,

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
+from time import perf_counter_ns
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -13,11 +14,14 @@ from fip_api.features import (
     history_checksum,
 )
 from fip_api.models import (
+    ScoringRuntimeObservation,
     Transaction,
     TransactionFeatureSnapshot,
     TransactionRuleAssessment,
 )
 from fip_api.rules import RISK_BAND_VERSION, RULESET_VERSION, evaluate_rules
+
+SCORING_RUNTIME_OBSERVATION_SCHEMA_VERSION = "semantic-rules-runtime-v1.0.0"
 
 
 def assess_transaction(
@@ -27,6 +31,8 @@ def assess_transaction(
     existing = find_current_rule_assessment(db, transaction.id)
     if existing is not None:
         return existing
+
+    started_at = perf_counter_ns()
 
     history_window_start = transaction.occurred_at - timedelta(days=HISTORY_WINDOW_DAYS)
     history = list(
@@ -89,6 +95,28 @@ def assess_transaction(
     )
     db.add(assessment)
     db.flush()
+    runtime_milliseconds = max(0, (perf_counter_ns() - started_at) // 1_000_000)
+    created_at = datetime.now(UTC)
+    observation = ScoringRuntimeObservation(
+        transaction_id=transaction.id,
+        feature_snapshot_id=snapshot.id,
+        rule_assessment_id=assessment.id,
+        observation_schema_version=SCORING_RUNTIME_OBSERVATION_SCHEMA_VERSION,
+        runtime_milliseconds=runtime_milliseconds,
+        rule_assessment_checksum=assessment.assessment_checksum,
+        observation_checksum=canonical_json_checksum(
+            _runtime_observation_facts(
+                external_transaction_id=transaction.external_transaction_id,
+                feature_snapshot_checksum=snapshot.snapshot_checksum,
+                rule_assessment_checksum=assessment.assessment_checksum,
+                runtime_milliseconds=runtime_milliseconds,
+                created_at=created_at,
+            )
+        ),
+        created_at=created_at,
+    )
+    db.add(observation)
+    db.flush()
     return snapshot, assessment
 
 
@@ -135,6 +163,58 @@ def verify_rule_assessment_integrity(
         and snapshot.transaction_id == transaction.id
         and expected_checksum == assessment.assessment_checksum
     )
+
+
+def verify_scoring_runtime_observation(
+    db: Session,
+    observation: ScoringRuntimeObservation,
+) -> bool:
+    transaction = db.get(Transaction, observation.transaction_id)
+    snapshot = db.get(TransactionFeatureSnapshot, observation.feature_snapshot_id)
+    assessment = db.get(TransactionRuleAssessment, observation.rule_assessment_id)
+    if transaction is None or snapshot is None or assessment is None:
+        return False
+    expected_checksum = canonical_json_checksum(
+        _runtime_observation_facts(
+            external_transaction_id=transaction.external_transaction_id,
+            feature_snapshot_checksum=snapshot.snapshot_checksum,
+            rule_assessment_checksum=assessment.assessment_checksum,
+            runtime_milliseconds=observation.runtime_milliseconds,
+            created_at=observation.created_at,
+        )
+    )
+    return (
+        observation.observation_schema_version == SCORING_RUNTIME_OBSERVATION_SCHEMA_VERSION
+        and observation.transaction_id == transaction.id
+        and observation.feature_snapshot_id == snapshot.id
+        and observation.rule_assessment_id == assessment.id
+        and observation.rule_assessment_checksum == assessment.assessment_checksum
+        and verify_rule_assessment_integrity(snapshot, assessment, transaction)
+        and observation.observation_checksum == expected_checksum
+    )
+
+
+def _runtime_observation_facts(
+    *,
+    external_transaction_id: str,
+    feature_snapshot_checksum: str,
+    rule_assessment_checksum: str,
+    runtime_milliseconds: int,
+    created_at: datetime,
+) -> dict[str, object]:
+    return {
+        "observation_schema_version": SCORING_RUNTIME_OBSERVATION_SCHEMA_VERSION,
+        "external_transaction_id": external_transaction_id,
+        "feature_snapshot_checksum": feature_snapshot_checksum,
+        "rule_assessment_checksum": rule_assessment_checksum,
+        "runtime_milliseconds": runtime_milliseconds,
+        "created_at": _timestamp_text(created_at),
+    }
+
+
+def _timestamp_text(value: datetime) -> str:
+    aware = value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+    return aware.isoformat()
 
 
 def backfill_rule_assessments(db: Session) -> int:

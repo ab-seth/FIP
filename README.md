@@ -47,6 +47,12 @@ fact-checked before display; unavailable or ungrounded output becomes a clearly 
 deterministic fallback. The LLM cannot change scores, classifications, or financial state. See
 [`docs/grounded-case-briefs.md`](docs/grounded-case-briefs.md).
 
+Authenticated evaluators and operators can inspect a single read-only system evaluation record at
+`/evaluation`. It distinguishes failed controls from evidence that is not observed or not yet
+demonstrated, reports only captured latency, re-verifies material record integrity, and pins the
+contract versions behind the snapshot. See
+[`docs/system-evaluation-record.md`](docs/system-evaluation-record.md).
+
 Medium and high deterministic assessments now open a human investigation case. Analysts can record
 notes and one final classification in a tamper-evident ledger; independent evaluators control
 whether a binary outcome is eligible for a future ML dataset. No feedback-driven training occurs in

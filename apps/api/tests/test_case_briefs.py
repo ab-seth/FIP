@@ -103,6 +103,22 @@ def test_valid_grounded_brief_is_cited_audited_and_replay_safe(
     ]
     assert body["events"][1]["payload"]["explanation_checksum"] == brief["explanation_checksum"]
 
+    evaluation = client.get("/api/v1/evaluation/record", headers=evaluator_headers)
+    assert evaluation.status_code == 200
+    explanation_evidence = evaluation.json()["explanations"]
+    assert explanation_evidence["total_briefs"] == 1
+    assert explanation_evidence["validated_llm_briefs"] == 1
+    assert explanation_evidence["deterministic_fallbacks"] == 0
+    assert explanation_evidence["displayed_grounding_failures"] == 0
+    assert explanation_evidence["llm_latency"] == {
+        "observation_count": 1,
+        "mean_milliseconds": "23",
+        "p95_milliseconds": "23",
+        "maximum_milliseconds": 23,
+        "target_milliseconds": 10000,
+        "status": "passed",
+    }
+
 
 def test_unsupported_numbers_and_actions_trigger_safe_deterministic_fallback(
     client: TestClient,
@@ -143,6 +159,16 @@ def test_unsupported_numbers_and_actions_trigger_safe_deterministic_fallback(
     assert "freeze" not in brief["output"]["summary"].lower()
     assert "fraud is confirmed" not in brief["output"]["summary"].lower()
     assert brief["integrity_verified"] is True
+
+    evaluation = client.get("/api/v1/evaluation/record", headers=headers)
+    assert evaluation.status_code == 200
+    explanation_evidence = evaluation.json()["explanations"]
+    assert explanation_evidence["validated_llm_briefs"] == 0
+    assert explanation_evidence["deterministic_fallbacks"] == 1
+    assert explanation_evidence["fallback_reasons"] == {"grounding_validation_failed": 1}
+    assert explanation_evidence["provider_candidate_grounding_failures"] == 1
+    assert explanation_evidence["displayed_grounding_failures"] == 0
+    assert explanation_evidence["llm_latency"]["status"] == "not_observed"
 
 
 def test_unknown_hybrid_evidence_is_rejected_before_provider_call(
