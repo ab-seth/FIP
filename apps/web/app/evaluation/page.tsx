@@ -264,7 +264,7 @@ function ExplanationEvidence({ record }: { record: SystemEvaluationRecord }) {
 function ModelEvidence({ record }: { record: SystemEvaluationRecord }) {
   const evidence = record.model_evidence;
   return (
-    <section className="evaluation-evidence-card model-evidence-card">
+    <section className="evaluation-evidence-card model-evidence-card" id="model-evidence">
       <header>
         <p className="eyebrow">Decision support only</p>
         <h3>Model evidence</h3>
@@ -389,7 +389,7 @@ function VersionLedger({ versions }: { versions: VersionLineage }) {
 
 function ModelEvaluationArchive({ reports }: { reports: ShadowEvaluationReport[] }) {
   return (
-    <section className="model-evaluation-archive">
+    <section className="model-evaluation-archive" id="model-evaluation-archive">
       <header className="evaluation-section-header">
         <div>
           <p className="eyebrow">Immutable archive</p>

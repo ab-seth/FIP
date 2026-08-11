@@ -70,6 +70,11 @@ model cards, checksummed artifacts, and schema-valid registration payloads. It n
 promotes a model. See
 [`docs/operational-candidate-training.md`](docs/operational-candidate-training.md).
 
+An authenticated, read-only audit workspace unifies the material records already owned by cases,
+scoring, model governance, explanations, hybrid evidence, datasets, and evaluation. It reuses each
+domain's integrity verifier, keeps damaged evidence visible, and never creates a second source of
+truth. See [`docs/audit-ledger.md`](docs/audit-ledger.md).
+
 ## Prerequisites
 
 - Node.js 24+

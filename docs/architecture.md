@@ -136,6 +136,18 @@ records, excludes damaged timing observations from latency statistics, assigns e
 `not_observed` and `not_demonstrated` states, and checksums the versioned response. See
 [`system-evaluation-record.md`](system-evaluation-record.md).
 
+## Unified audit projection boundary
+
+The `audit` module is a read-only cross-domain index. It reads material records from cases, model
+governance, scoring observations, grounded explanations, hybrid evidence, operational datasets, and
+model evaluation, then delegates verification back to each owning module. It does not persist a
+second ledger, rechecksum damaged evidence, or expose a mutation endpoint.
+
+Case and model events remain hash-chained inside their domain boundaries. Other records retain
+their existing content and lineage checksums. The projection deliberately keeps damaged records
+visible and supports filterable, paginated inspection without changing operational state. See
+[`audit-ledger.md`](audit-ledger.md).
+
 ## Investigation case boundary
 
 The `cases` module converts medium and high deterministic assessments into a human review queue. A
