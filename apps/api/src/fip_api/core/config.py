@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field, SecretStr, model_validator
@@ -28,6 +29,8 @@ class Settings(BaseSettings):
     login_lock_minutes: int = Field(default=15, ge=1, le=1440)
     transaction_upload_max_bytes: int = Field(default=10 * 1024 * 1024, ge=1024)
     transaction_upload_max_rows: int = Field(default=10_000, ge=1, le=100_000)
+    model_artifact_root: Path = Path("/var/lib/fip/model-artifacts")
+    model_artifact_max_bytes: int = Field(default=256 * 1024 * 1024, ge=1024)
     bootstrap_admin_username: str | None = None
     bootstrap_admin_password: SecretStr | None = None
     cors_origins: list[str] = ["http://localhost:3000"]

@@ -73,9 +73,11 @@ delete endpoints for model registrations, lifecycle events, or shadow prediction
 
 ## Shadow runtime boundary
 
-An internal runtime must prove that its artifact checksum, feature-set version, and runtime contract
-exactly match the registered model. FIP then evaluates the immutable canonical feature snapshot and
-records:
+An administrator can install bytes only when their SHA-256 matches an operational registration.
+After independent evaluator admission, a role-gated shadow run re-hashes the stored file before
+deserialization and proves that the artifact class, kind, training dataset, threshold,
+feature-set version, and runtime contract match the registered model. FIP then evaluates the
+immutable canonical feature snapshot and records:
 
 - normalized score and registered comparison threshold;
 - whether the score would exceed that threshold;
@@ -85,8 +87,10 @@ records:
 - a checksum covering the transaction, feature snapshot, model registration, authorization event,
   output schema, score, threshold, factors, latency, and timestamp.
 
-The internal runtime interface is deliberately not exposed as an API that accepts caller-supplied
-scores. A future trusted worker or model-serving adapter will call it after verifying its artifact.
+The API never accepts a caller-supplied score or artifact path. Administrators upload exact artifact
+bytes to content-addressed storage, while administrators and evaluators can trigger controlled
+shadow runs. See [`trusted-shadow-runtime.md`](trusted-shadow-runtime.md) for the workflow and
+serialized-code trust boundary.
 
 Authenticated users can inspect recorded outputs with:
 
@@ -108,4 +112,4 @@ disagreement without changing model status or operational scoring. See
 - No public research artifact is deployable against canonical transactions.
 - No shadow score changes the rules-only assessment or analyst queue.
 - No automated intervention, retraining, lifecycle decision, or model promotion occurs.
-- No serialized artifact is loaded from an untrusted request.
+- No artifact is deserialized before checksum verification and evaluator shadow authorization.

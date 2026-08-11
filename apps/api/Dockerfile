@@ -5,7 +5,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-RUN addgroup --system fip && adduser --system --ingroup fip fip
+RUN addgroup --system fip \
+    && adduser --system --ingroup fip fip \
+    && mkdir -p /var/lib/fip/model-artifacts \
+    && chown -R fip:fip /var/lib/fip
 
 COPY pyproject.toml README.md ./
 COPY alembic.ini ./
