@@ -101,6 +101,11 @@ GET /api/v1/transactions/{transaction_id}/shadow-predictions
 Every response states `shadow_only: true` and `affects_operational_score: false`. Exact replays for
 the same model version and feature snapshot are idempotent.
 
+One verified supervised prediction and one verified anomaly prediction may be named explicitly as
+inputs to a separate hybrid decision-support assessment. That operation preserves their shadow-only
+status and cannot alter the rules-only score or analyst queue. See
+[`hybrid-risk-evidence.md`](hybrid-risk-evidence.md).
+
 Evaluators can aggregate verified predictions into immutable baseline-versus-evaluation monitoring
 reports. The reports measure score and feature drift, latency, threshold rates, and rules/model
 disagreement without changing model status or operational scoring. See

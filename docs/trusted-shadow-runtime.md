@@ -75,7 +75,8 @@ prediction.
 ## Explicit limits
 
 - Shadow inference is operator-triggered; intake remains available if an artifact is absent.
-- No shadow output participates in the current rules-only case score.
+- A verified shadow output may be referenced by a separate hybrid evidence record, but it never
+  changes the rules-only case score or case priority.
 - No public research model can enter this runtime because its purpose and feature contract fail the
   operational gates.
 - Serialized model portability still depends on compatible Python, NumPy, joblib, and scikit-learn

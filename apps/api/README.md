@@ -30,6 +30,14 @@ can execute checksum-verified, shadow-only inference with
 `POST /api/v1/models/{model_id}/shadow-runs`. See
 [`../../docs/trusted-shadow-runtime.md`](../../docs/trusted-shadow-runtime.md).
 
+Administrators and evaluators can combine explicitly selected, verified supervised and anomaly
+predictions with the pinned rules result through
+`POST /api/v1/transactions/{transaction_id}/hybrid-assessments`. Authenticated users can read the
+immutable evidence from the matching GET endpoint. Existing case-detail responses project any
+matching hybrid records without changing the case ledger. The versioned formula, fail-closed
+lineage, and non-intervention boundary are documented in
+[`../../docs/hybrid-risk-evidence.md`](../../docs/hybrid-risk-evidence.md).
+
 Evaluators can create immutable comparison reports with
 `POST /api/v1/models/{model_id}/evaluations`; authenticated users can read them from the matching GET
 endpoint. Drift, latency, rules-comparison, integrity, and claims boundaries are documented in

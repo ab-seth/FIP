@@ -20,6 +20,7 @@ from fip_api.models.model_registry import (
     ShadowModelPrediction,
 )
 from fip_api.models.risk import (
+    HybridRiskAssessment,
     RuleRiskLevel,
     TransactionFeatureSnapshot,
     TransactionRuleAssessment,
@@ -51,6 +52,7 @@ __all__ = [
     "DatasetSplit",
     "IngestionBatch",
     "IngestionSourceType",
+    "HybridRiskAssessment",
     "ModelKind",
     "ModelLifecycleEvent",
     "ModelLifecycleStatus",

@@ -7,6 +7,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from fip_api.core.checksums import canonical_json_checksum
+from fip_api.hybrid_scoring import (
+    build_hybrid_assessment_response,
+    list_hybrid_assessments,
+)
 from fip_api.models import (
     AnalystCase,
     CaseClassification,
@@ -311,6 +315,10 @@ def build_case_detail_response(db: Session, case: AnalystCase) -> CaseDetailResp
             triggered_rules=assessment.triggered_rules,
             feature_values=snapshot.feature_values,
         ),
+        hybrid_assessments=[
+            build_hybrid_assessment_response(db, hybrid_assessment)
+            for hybrid_assessment in list_hybrid_assessments(db, transaction.id)
+        ],
         events=[
             CaseEventResponse(
                 sequence_number=event.sequence_number,

@@ -12,6 +12,13 @@ from sqlalchemy.orm import Session
 from fip_api.api.dependencies import get_current_user, require_roles
 from fip_api.core.config import get_settings
 from fip_api.db.session import get_db
+from fip_api.hybrid_scoring import (
+    HybridEvidenceNotFound,
+    HybridEvidenceViolation,
+    build_hybrid_assessment_response,
+    create_hybrid_assessment,
+    list_hybrid_assessments,
+)
 from fip_api.ingestion.csv_parser import parse_csv_upload
 from fip_api.ingestion.service import (
     apply_existing_transaction_conflicts,
@@ -26,6 +33,11 @@ from fip_api.ingestion.service import (
 from fip_api.model_registry import build_shadow_prediction_response, list_shadow_predictions
 from fip_api.models import RuleRiskLevel, Transaction, User, UserRole
 from fip_api.rules import EVALUATED_RULE_COUNT
+from fip_api.schemas.hybrid_risk import (
+    HybridAssessmentCreate,
+    HybridAssessmentCreationResponse,
+    HybridRiskAssessmentResponse,
+)
 from fip_api.schemas.model_registry import ShadowPredictionResponse
 from fip_api.schemas.risk import (
     FeatureSnapshotResponse,
@@ -48,6 +60,10 @@ IntakeUser = Annotated[
     Depends(require_roles(UserRole.ADMINISTRATOR, UserRole.ANALYST)),
 ]
 AuthenticatedUser = Annotated[User, Depends(get_current_user)]
+HybridEvidenceActor = Annotated[
+    User,
+    Depends(require_roles(UserRole.ADMINISTRATOR, UserRole.EVALUATOR)),
+]
 Database = Annotated[Session, Depends(get_db)]
 SourceFilename = Annotated[str | None, Header(alias="X-FIP-Filename")]
 
@@ -245,6 +261,67 @@ def get_shadow_predictions(
     return [
         build_shadow_prediction_response(db, prediction)
         for prediction in list_shadow_predictions(db, transaction_id)
+    ]
+
+
+@router.post(
+    "/{transaction_id}/hybrid-assessments",
+    response_model=HybridAssessmentCreationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_transaction_hybrid_assessment(
+    transaction_id: str,
+    payload: HybridAssessmentCreate,
+    response: Response,
+    db: Database,
+    user: HybridEvidenceActor,
+) -> HybridAssessmentCreationResponse:
+    try:
+        assessment, created = create_hybrid_assessment(
+            db,
+            transaction_id=transaction_id,
+            supervised_prediction_id=payload.supervised_prediction_id,
+            anomaly_prediction_id=payload.anomaly_prediction_id,
+            actor=user,
+        )
+        db.commit()
+    except HybridEvidenceNotFound as exc:
+        db.rollback()
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except HybridEvidenceViolation as exc:
+        db.rollback()
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="The hybrid evidence set changed concurrently.",
+        ) from exc
+
+    db.refresh(assessment)
+    if not created:
+        response.status_code = status.HTTP_200_OK
+    return HybridAssessmentCreationResponse(
+        created=created,
+        assessment=build_hybrid_assessment_response(db, assessment),
+    )
+
+
+@router.get(
+    "/{transaction_id}/hybrid-assessments",
+    response_model=list[HybridRiskAssessmentResponse],
+)
+def get_transaction_hybrid_assessments(
+    transaction_id: str,
+    db: Database,
+    user: AuthenticatedUser,
+) -> list[HybridRiskAssessmentResponse]:
+    del user
+    if db.get(Transaction, transaction_id) is None:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    return [
+        build_hybrid_assessment_response(db, assessment)
+        for assessment in list_hybrid_assessments(db, transaction_id)
     ]
 
 
