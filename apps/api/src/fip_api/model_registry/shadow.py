@@ -50,9 +50,14 @@ class ShadowRuntimeOutput:
 
 
 class ShadowRuntime(Protocol):
-    artifact_sha256: str
-    feature_set_version: str
-    runtime_contract: ModelRuntimeContract
+    @property
+    def artifact_sha256(self) -> str: ...
+
+    @property
+    def feature_set_version(self) -> str: ...
+
+    @property
+    def runtime_contract(self) -> ModelRuntimeContract: ...
 
     def predict(self, feature_values: dict[str, object]) -> ShadowRuntimeOutput: ...
 

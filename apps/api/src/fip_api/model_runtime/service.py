@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
-import joblib
+import joblib  # type: ignore[import-untyped]
 import numpy as np
 from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
