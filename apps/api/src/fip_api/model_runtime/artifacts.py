@@ -32,6 +32,14 @@ class ArtifactInstallation:
     installed: bool
 
 
+@dataclass(frozen=True)
+class ArtifactStatus:
+    checksum: str
+    installed: bool
+    integrity_verified: bool
+    size_bytes: int | None
+
+
 class ModelArtifactStore:
     """Content-addressed storage for administrator-approved model artifacts."""
 
@@ -85,6 +93,33 @@ class ModelArtifactStore:
             checksum=checksum,
             size_bytes=len(content),
             installed=True,
+        )
+
+    def status(self, expected_checksum: str) -> ArtifactStatus:
+        checksum = _validated_checksum(expected_checksum)
+        try:
+            with self.open_verified(checksum) as artifact:
+                artifact.seek(0, os.SEEK_END)
+                size_bytes = artifact.tell()
+        except ArtifactNotInstalled:
+            return ArtifactStatus(
+                checksum=checksum,
+                installed=False,
+                integrity_verified=False,
+                size_bytes=None,
+            )
+        except ArtifactIntegrityError:
+            return ArtifactStatus(
+                checksum=checksum,
+                installed=True,
+                integrity_verified=False,
+                size_bytes=None,
+            )
+        return ArtifactStatus(
+            checksum=checksum,
+            installed=True,
+            integrity_verified=True,
+            size_bytes=size_bytes,
         )
 
     @contextmanager
