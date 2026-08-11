@@ -155,6 +155,12 @@ def test_verified_artifact_runs_shadow_inference_without_changing_rule_score(
         headers=analyst_headers,
     ).json()
 
+    missing_status = client.get(
+        f"/api/v1/models/{model_id}/artifact",
+        headers=analyst_headers,
+    )
+    denied_status = client.get(f"/api/v1/models/{model_id}/artifact")
+
     denied_install = client.put(
         f"/api/v1/models/{model_id}/artifact",
         content=artifact,
@@ -174,6 +180,10 @@ def test_verified_artifact_runs_shadow_inference_without_changing_rule_score(
         f"/api/v1/models/{model_id}/artifact",
         content=artifact,
         headers={**admin_headers, "Content-Type": "application/octet-stream"},
+    )
+    installed_status = client.get(
+        f"/api/v1/models/{model_id}/artifact",
+        headers=analyst_headers,
     )
     blocked_before_shadow = client.post(
         f"/api/v1/models/{model_id}/shadow-runs",
@@ -205,6 +215,15 @@ def test_verified_artifact_runs_shadow_inference_without_changing_rule_score(
 
     assert transaction.status_code == 201
     assert registered.status_code == 201
+    assert missing_status.status_code == 200
+    assert missing_status.json() == {
+        "model_id": model_id,
+        "artifact_sha256": hashlib.sha256(artifact).hexdigest(),
+        "installed": False,
+        "integrity_verified": False,
+        "size_bytes": None,
+    }
+    assert denied_status.status_code == 401
     assert denied_install.status_code == 403
     assert mismatched_install.status_code == 409
     assert installed.status_code == 201
@@ -212,6 +231,10 @@ def test_verified_artifact_runs_shadow_inference_without_changing_rule_score(
     assert installed.json()["integrity_verified"] is True
     assert installed_replay.status_code == 200
     assert installed_replay.json()["installed"] is False
+    assert installed_status.status_code == 200
+    assert installed_status.json()["installed"] is True
+    assert installed_status.json()["integrity_verified"] is True
+    assert installed_status.json()["size_bytes"] == len(artifact)
     assert blocked_before_shadow.status_code == 409
     assert "shadow status" in blocked_before_shadow.json()["detail"]
     assert admitted.status_code == 200
@@ -299,11 +322,19 @@ def test_batch_selects_unscored_transactions_and_rejects_tampered_artifact(
         json={"limit": 10},
         headers=evaluator_headers,
     )
+    damaged_status = client.get(
+        f"/api/v1/models/{model_id}/artifact",
+        headers=analyst_headers,
+    )
 
     assert first_run.status_code == 201
     assert first_run.json()["selected_count"] == 1
     assert second_run.status_code == 409
     assert "no longer matches" in second_run.json()["detail"]
+    assert damaged_status.status_code == 200
+    assert damaged_status.json()["installed"] is True
+    assert damaged_status.json()["integrity_verified"] is False
+    assert damaged_status.json()["size_bytes"] is None
     assert db_session.scalar(select(func.count()).select_from(ShadowModelPrediction)) == 1
 
 

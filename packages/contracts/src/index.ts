@@ -360,6 +360,129 @@ export interface DatasetSnapshotCreateResponse {
   dataset: OperationalDatasetDetail;
 }
 
+export type ModelKind = "supervised" | "anomaly";
+export type ModelPurpose = "research" | "operational";
+export type ModelRuntimeContract = "binary-probability-v1" | "anomaly-score-v1";
+export type ModelLifecycleStatus = "candidate" | "shadow" | "retired" | "rejected";
+
+export interface ModelRegistrationPayload {
+  model_key: string;
+  version: string;
+  kind: ModelKind;
+  purpose: ModelPurpose;
+  runtime_contract: ModelRuntimeContract;
+  artifact_sha256: string;
+  feature_set_version: string;
+  training_dataset_id: string;
+  training_dataset_checksum: string;
+  training_data_approved: boolean;
+  operational_feature_compatible: boolean;
+  decision_threshold: string | number | null;
+  evaluation_metrics: Record<string, string | number | boolean>;
+  model_card_reference: string;
+  model_card_checksum: string;
+}
+
+export interface ModelLifecycleEvent {
+  sequence_number: number;
+  from_status: ModelLifecycleStatus | null;
+  to_status: ModelLifecycleStatus;
+  reason: string;
+  actor_username: string;
+  previous_event_checksum: string | null;
+  event_checksum: string;
+  created_at: string;
+}
+
+export interface RegisteredModel {
+  id: string;
+  model_key: string;
+  version: string;
+  kind: ModelKind;
+  purpose: ModelPurpose;
+  runtime_contract: ModelRuntimeContract;
+  artifact_sha256: string;
+  feature_set_version: string;
+  training_dataset_id: string;
+  training_dataset_checksum: string;
+  training_data_approved: boolean;
+  operational_feature_compatible: boolean;
+  decision_threshold: string | null;
+  evaluation_metrics: Record<string, unknown>;
+  model_card_reference: string;
+  model_card_checksum: string;
+  registered_by: string;
+  registration_checksum: string;
+  current_status: ModelLifecycleStatus;
+  lineage_verified: boolean;
+  lifecycle: ModelLifecycleEvent[];
+  created_at: string;
+}
+
+export interface ModelRegistrationResponse {
+  created: boolean;
+  model: RegisteredModel;
+}
+
+export interface ModelArtifactStatus {
+  model_id: string;
+  artifact_sha256: string;
+  installed: boolean;
+  integrity_verified: boolean;
+  size_bytes: number | null;
+}
+
+export interface ModelArtifactInstallationResponse {
+  model_id: string;
+  artifact_sha256: string;
+  size_bytes: number;
+  installed: boolean;
+  integrity_verified: boolean;
+}
+
+export interface ShadowFactor {
+  feature: string;
+  contribution: string;
+  direction: string;
+}
+
+export interface ShadowPrediction {
+  id: string;
+  transaction_id: string;
+  model_id: string;
+  model_key: string;
+  model_version: string;
+  feature_set_version: string;
+  feature_snapshot_checksum: string;
+  authorization_event_checksum: string;
+  output_schema_version: string;
+  score: string;
+  threshold: string;
+  would_exceed_model_threshold: boolean;
+  factors: ShadowFactor[];
+  runtime_milliseconds: number;
+  prediction_checksum: string;
+  integrity_verified: boolean;
+  shadow_only: true;
+  affects_operational_score: false;
+  created_at: string;
+}
+
+export interface ShadowRunResponse {
+  model_id: string;
+  selected_count: number;
+  created_count: number;
+  replayed_count: number;
+  shadow_only: true;
+  affects_operational_score: false;
+  predictions: ShadowPrediction[];
+}
+
+export interface ShadowEvaluationCreationResponse {
+  created: boolean;
+  report: ShadowEvaluationReport;
+}
+
 export type EvaluationGateStatus =
   | "passed"
   | "failed"

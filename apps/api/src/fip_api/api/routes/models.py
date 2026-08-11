@@ -43,6 +43,7 @@ from fip_api.schemas.model_evaluation import (
 )
 from fip_api.schemas.model_registry import (
     ModelArtifactInstallationResponse,
+    ModelArtifactStatusResponse,
     ModelRegistrationCreate,
     ModelRegistrationResponse,
     ModelTransitionCreate,
@@ -110,6 +111,27 @@ def get_registered_model(
     if model is None:
         raise HTTPException(status_code=404, detail="Model version not found.")
     return build_model_response(db, model)
+
+
+@router.get("/{model_id}/artifact", response_model=ModelArtifactStatusResponse)
+def get_model_artifact_status(
+    model_id: str,
+    db: Database,
+    store: ArtifactStore,
+    user: AuthenticatedUser,
+) -> ModelArtifactStatusResponse:
+    del user
+    model = db.get(RegisteredModel, model_id)
+    if model is None:
+        raise HTTPException(status_code=404, detail="Model version not found.")
+    artifact_status = store.status(model.artifact_sha256)
+    return ModelArtifactStatusResponse(
+        model_id=model.id,
+        artifact_sha256=artifact_status.checksum,
+        installed=artifact_status.installed,
+        integrity_verified=artifact_status.integrity_verified,
+        size_bytes=artifact_status.size_bytes,
+    )
 
 
 @router.put(

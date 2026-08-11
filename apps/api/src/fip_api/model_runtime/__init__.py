@@ -2,6 +2,7 @@ from fip_api.model_runtime.artifacts import (
     ArtifactInstallation,
     ArtifactIntegrityError,
     ArtifactNotInstalled,
+    ArtifactStatus,
     ArtifactStoreError,
     ModelArtifactStore,
     get_model_artifact_store,
@@ -17,6 +18,7 @@ from fip_api.model_runtime.service import (
 
 __all__ = [
     "ArtifactInstallation",
+    "ArtifactStatus",
     "ArtifactIntegrityError",
     "ArtifactNotInstalled",
     "ArtifactStoreError",

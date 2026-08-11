@@ -30,6 +30,10 @@ can execute checksum-verified, shadow-only inference with
 `POST /api/v1/models/{model_id}/shadow-runs`. See
 [`../../docs/trusted-shadow-runtime.md`](../../docs/trusted-shadow-runtime.md).
 
+All authenticated roles can inspect whether the registered bytes are present and checksum-valid
+with `GET /api/v1/models/{model_id}/artifact`. The endpoint reports status and size without exposing
+the artifact path or returning executable bytes.
+
 Administrators and evaluators can combine explicitly selected, verified supervised and anomaly
 predictions with the pinned rules result through
 `POST /api/v1/transactions/{transaction_id}/hybrid-assessments`. Authenticated users can read the

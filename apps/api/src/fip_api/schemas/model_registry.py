@@ -104,6 +104,14 @@ class ModelArtifactInstallationResponse(BaseModel):
     integrity_verified: bool = True
 
 
+class ModelArtifactStatusResponse(BaseModel):
+    model_id: str
+    artifact_sha256: str
+    installed: bool
+    integrity_verified: bool
+    size_bytes: int | None
+
+
 class ShadowFactorResponse(BaseModel):
     feature: str
     contribution: str

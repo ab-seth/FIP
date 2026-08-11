@@ -47,6 +47,16 @@ curl --fail-with-body \
 An exact replay is idempotent. Empty, oversized, checksum-mismatched, symlinked, non-regular, or
 subsequently modified artifacts are rejected.
 
+Authenticated users can inspect the trusted-store evidence without reading the artifact:
+
+```text
+GET /api/v1/models/{model_id}/artifact
+```
+
+The response distinguishes a missing artifact from an installed artifact that failed fresh
+checksum verification. It returns only the registered checksum, byte count, and status flags; the
+content-addressed path and artifact bytes are never exposed.
+
 ## Run shadow inference
 
 After independent evaluator admission, an administrator or evaluator can score an explicit set of
@@ -82,3 +92,6 @@ prediction.
 - Serialized model portability still depends on compatible Python, NumPy, joblib, and scikit-learn
   versions; the candidate evidence records those versions.
 - Production activation and automated model promotion remain unavailable.
+
+The web control surface for this workflow is documented in
+[`model-operations-workspace.md`](model-operations-workspace.md).

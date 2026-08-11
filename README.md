@@ -36,6 +36,13 @@ after checksum verification and independent evaluator shadow admission. The oper
 runtime records immutable ML predictions and local semantic factors without changing case decisions.
 See [`docs/trusted-shadow-runtime.md`](docs/trusted-shadow-runtime.md).
 
+The `/ml/models` workspace exposes that governed handoff without collapsing its trust boundaries.
+Administrators register generated candidate payloads and install matching artifacts; independent
+evaluators control shadow admission; authorized operators can run advisory inference; and
+evaluators can seal monitoring windows. All roles can inspect artifact status, lifecycle lineage,
+checksums, and reports. See
+[`docs/model-operations-workspace.md`](docs/model-operations-workspace.md).
+
 A governed hybrid evidence service can combine one verified rule assessment with explicit
 supervised and anomaly shadow predictions under the versioned 20/60/20 policy. It preserves exact
 lineage and contributions, fails closed on missing or damaged inputs, and cannot change case or
