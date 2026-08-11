@@ -37,6 +37,11 @@ SHA-256 chain over the prior checksum, actor, timestamp, action type, and payloa
 its independent review have their own checksums. Case reads verify the complete chain and expose
 `integrity_verified`; mutations stop when verification fails.
 
+Generating a grounded case brief appends `brief_generated` with its evidence and explanation
+checksums, provider and prompt lineage, and generation mode. The explanation has its own integrity
+verification and cannot alter the lifecycle status derived from human case events. See
+[`grounded-case-briefs.md`](grounded-case-briefs.md).
+
 A label is `training_eligible` only when all of the following are true:
 
 - the outcome is `confirmed_fraud` or `legitimate`;
@@ -58,6 +63,8 @@ All endpoints require authentication.
 | `POST` | `/api/v1/cases/{case_id}/notes` | Administrator, analyst | Append a note before final classification. |
 | `POST` | `/api/v1/cases/{case_id}/outcomes` | Administrator, analyst | Record the immutable final classification. |
 | `POST` | `/api/v1/cases/{case_id}/outcomes/{outcome_id}/review` | Evaluator | Approve or reject future-ML label eligibility. |
+| `GET` | `/api/v1/cases/{case_id}/briefs` | Any authenticated role | Read immutable grounded explanation records. |
+| `POST` | `/api/v1/cases/{case_id}/briefs` | Administrator, analyst | Generate a validated cited brief without changing the score or decision. |
 
 ## Existing assessments
 

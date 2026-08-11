@@ -142,6 +142,7 @@ def test_flagged_assessment_opens_one_explainable_case(
     assert case["integrity_verified"] is True
     assert detail.status_code == 200
     assert detail.json()["hybrid_assessments"] == []
+    assert detail.json()["case_briefs"] == []
     assert premature_outcome.status_code == 409
     assert "review must begin" in premature_outcome.json()["detail"]
     assert detail.json()["evidence"]["rule_score"] == 100

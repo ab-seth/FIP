@@ -7,12 +7,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from fip_api.core.checksums import canonical_json_checksum
+from fip_api.explainability import build_case_brief_response, list_case_briefs
 from fip_api.hybrid_scoring import (
     build_hybrid_assessment_response,
     list_hybrid_assessments,
 )
 from fip_api.models import (
     AnalystCase,
+    CaseBrief,
     CaseClassification,
     CaseEvent,
     CaseEventType,
@@ -278,6 +280,34 @@ def review_case_outcome(
     return case
 
 
+def record_case_brief_event(
+    db: Session,
+    case: AnalystCase,
+    brief: CaseBrief,
+    actor: User,
+) -> AnalystCase:
+    locked_case = _locked_case(db, case.id)
+    _assert_integrity(db, locked_case)
+    _append_event(
+        db,
+        locked_case,
+        CaseEventType.BRIEF_GENERATED,
+        {
+            "brief_id": brief.id,
+            "evidence_checksum": brief.evidence_checksum,
+            "explanation_checksum": brief.explanation_checksum,
+            "generation_mode": brief.generation_mode,
+            "hybrid_assessment_id": brief.hybrid_assessment_id,
+            "output_schema_version": brief.output_schema_version,
+            "prompt_version": brief.prompt_version,
+            "provider_model": brief.provider_model,
+            "provider_name": brief.provider_name,
+        },
+        actor,
+    )
+    return locked_case
+
+
 def build_case_summary_response(db: Session, case: AnalystCase) -> CaseSummaryResponse:
     transaction, _, assessment = _evidence(db, case)
     events = _events(db, case.id)
@@ -318,6 +348,9 @@ def build_case_detail_response(db: Session, case: AnalystCase) -> CaseDetailResp
         hybrid_assessments=[
             build_hybrid_assessment_response(db, hybrid_assessment)
             for hybrid_assessment in list_hybrid_assessments(db, transaction.id)
+        ],
+        case_briefs=[
+            build_case_brief_response(db, brief) for brief in list_case_briefs(db, case.id)
         ],
         events=[
             CaseEventResponse(

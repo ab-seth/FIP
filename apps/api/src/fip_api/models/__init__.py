@@ -9,6 +9,7 @@ from fip_api.models.case import (
     CaseStatus,
     OutcomeReviewStatus,
 )
+from fip_api.models.explanation import CaseBrief
 from fip_api.models.model_registry import (
     ModelKind,
     ModelLifecycleEvent,
@@ -42,6 +43,7 @@ from fip_api.models.user import User, UserRole
 __all__ = [
     "AnalystCase",
     "CaseClassification",
+    "CaseBrief",
     "CaseEvent",
     "CaseEventType",
     "CaseOutcome",

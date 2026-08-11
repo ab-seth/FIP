@@ -9,8 +9,10 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from fip_api.core.security import hash_password
+from fip_api.explainability import CaseBriefProviderResult, get_case_brief_provider
 from fip_api.features import FEATURE_SET_VERSION
 from fip_api.hybrid_scoring import DEFAULT_HYBRID_POLICY
+from fip_api.main import app
 from fip_api.model_registry import ShadowRuntimeOutput, score_shadow_transaction
 from fip_api.models import (
     AnalystCase,
@@ -43,6 +45,57 @@ class FixedShadowRuntime:
     def predict(self, feature_values: dict[str, object]) -> ShadowRuntimeOutput:
         assert feature_values["currency"] == "USD"
         return ShadowRuntimeOutput(score=self.score)
+
+
+class HybridBriefProvider:
+    provider_name = "hybrid-brief-test-provider"
+    model_name = "hybrid-grounding-test-v1"
+
+    def generate(self, request_payload: dict[str, object]) -> CaseBriefProviderResult:
+        evidence = request_payload["evidence"]
+        assert isinstance(evidence, dict)
+        catalog = evidence["evidence_catalog"]
+        assert isinstance(catalog, dict)
+        assert "hybrid.score" in catalog
+        output = {
+            "summary": (
+                "Verified hybrid decision-support evidence recorded 78 out of 100 and a "
+                "high risk level; human review remains required."
+            ),
+            "summary_evidence_refs": [
+                "hybrid.score",
+                "limitations.human_authority",
+            ],
+            "primary_risk_factors": [
+                {
+                    "text": "The supervised component contributed 48 points.",
+                    "evidence_refs": ["hybrid.components.supervised"],
+                }
+            ],
+            "supporting_evidence": [
+                {
+                    "text": "The rules component contributed 20 points.",
+                    "evidence_refs": ["hybrid.components.rules"],
+                }
+            ],
+            "uncertainties": [
+                {
+                    "text": "The model inputs remain shadow-only decision support.",
+                    "evidence_refs": ["hybrid.limitations"],
+                }
+            ],
+            "recommended_review_steps": [
+                {
+                    "text": "Keep final classification under human review.",
+                    "evidence_refs": ["limitations.human_authority"],
+                }
+            ],
+        }
+        return CaseBriefProviderResult(
+            output=output,
+            raw_output="hybrid provider test output",
+            generation_milliseconds=31,
+        )
 
 
 def _auth_headers(
@@ -544,3 +597,67 @@ def test_case_detail_reads_hybrid_evidence_without_mutating_case(
     assert after.json()["opening_checksum"] == before.json()["opening_checksum"]
     assert after.json()["events"] == before.json()["events"]
     assert db_session.scalar(select(func.count()).select_from(AnalystCase)) == 1
+
+
+def test_case_brief_uses_one_explicit_verified_hybrid_assessment(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    admin_headers, _ = _auth_headers(
+        client, db_session, username="brief-hybrid-admin", role=UserRole.ADMINISTRATOR
+    )
+    evaluator_headers, _ = _auth_headers(
+        client, db_session, username="brief-hybrid-evaluator", role=UserRole.EVALUATOR
+    )
+    analyst_headers, _ = _auth_headers(
+        client, db_session, username="brief-hybrid-analyst", role=UserRole.ANALYST
+    )
+    supervised_model_id, anomaly_model_id = _register_shadow_pair(
+        client,
+        admin_headers=admin_headers,
+        evaluator_headers=evaluator_headers,
+    )
+    transaction_id, case_id = _create_flagged_transaction_and_case(
+        client,
+        analyst_headers=analyst_headers,
+        suffix="BRIEF-HYBRID",
+    )
+    supervised, anomaly = _score_pair(
+        db_session,
+        transaction_id=transaction_id,
+        supervised_model_id=supervised_model_id,
+        anomaly_model_id=anomaly_model_id,
+    )
+    hybrid = client.post(
+        f"/api/v1/transactions/{transaction_id}/hybrid-assessments",
+        json={
+            "supervised_prediction_id": supervised.id,
+            "anomaly_prediction_id": anomaly.id,
+        },
+        headers=evaluator_headers,
+    )
+    assert hybrid.status_code == 201
+    hybrid_id = str(hybrid.json()["assessment"]["id"])
+    app.dependency_overrides[get_case_brief_provider] = HybridBriefProvider
+
+    created = client.post(
+        f"/api/v1/cases/{case_id}/briefs",
+        headers=analyst_headers,
+        json={"hybrid_assessment_id": hybrid_id},
+    )
+    detail = client.get(f"/api/v1/cases/{case_id}", headers=analyst_headers)
+
+    assert created.status_code == 201
+    brief = created.json()["brief"]
+    assert brief["hybrid_assessment_id"] == hybrid_id
+    assert brief["generation_mode"] == "llm"
+    assert brief["output"]["summary_evidence_refs"] == [
+        "hybrid.score",
+        "limitations.human_authority",
+    ]
+    assert brief["integrity_verified"] is True
+    assert detail.status_code == 200
+    assert detail.json()["risk_score"] == 100
+    assert detail.json()["priority"] == "urgent"
+    assert detail.json()["status"] == "open"
+    assert detail.json()["outcome"] is None

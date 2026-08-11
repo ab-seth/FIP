@@ -94,7 +94,8 @@ export type CaseEventType =
   | "review_started"
   | "note_added"
   | "classified"
-  | "outcome_reviewed";
+  | "outcome_reviewed"
+  | "brief_generated";
 
 export interface CaseTransaction {
   id: string;
@@ -159,6 +160,113 @@ export interface CaseRuleEvidence {
   feature_values: Record<string, unknown>;
 }
 
+export interface HybridRiskWeights {
+  rules: string;
+  supervised: string;
+  anomaly: string;
+}
+
+export interface HybridRiskComponent {
+  source_score: string;
+  normalized_score: string;
+  weight: string;
+  contribution_points: string;
+}
+
+export interface HybridRiskAssessment {
+  id: string;
+  transaction_id: string;
+  feature_snapshot_id: string;
+  rule_assessment_id: string;
+  supervised_prediction_id: string;
+  anomaly_prediction_id: string;
+  policy_version: string;
+  evidence_schema_version: string;
+  weights: HybridRiskWeights;
+  components: {
+    rules: HybridRiskComponent;
+    supervised: HybridRiskComponent;
+    anomaly: HybridRiskComponent;
+  };
+  combined_score: string;
+  risk_level: "low" | "medium" | "high";
+  evidence: Record<string, unknown>;
+  created_by: string;
+  assessment_checksum: string;
+  integrity_verified: boolean;
+  decision_support_only: true;
+  shadow_inputs_only: true;
+  affects_case_priority: false;
+  affects_transaction_action: false;
+  llm_influenced_score: false;
+  created_at: string;
+}
+
+export interface CaseBriefClaim {
+  text: string;
+  evidence_refs: string[];
+}
+
+export interface CaseBriefOutput {
+  summary: string;
+  summary_evidence_refs: string[];
+  primary_risk_factors: CaseBriefClaim[];
+  supporting_evidence: CaseBriefClaim[];
+  uncertainties: CaseBriefClaim[];
+  recommended_review_steps: CaseBriefClaim[];
+}
+
+export interface GroundingFailure {
+  code: string;
+  location: string;
+  detail: string;
+}
+
+export interface GroundingValidation {
+  schema_valid: boolean;
+  citations_valid: boolean;
+  numerical_claims_valid: boolean;
+  prohibited_actions_absent: boolean;
+  grounding_passed: boolean;
+  failures: GroundingFailure[];
+}
+
+export interface CaseBriefValidation {
+  provider_candidate: GroundingValidation;
+  display_output: GroundingValidation;
+  fallback_used: boolean;
+  fallback_reason: string | null;
+}
+
+export interface CaseBrief {
+  id: string;
+  case_id: string;
+  transaction_id: string;
+  rule_assessment_id: string;
+  hybrid_assessment_id: string | null;
+  prompt_version: string;
+  output_schema_version: string;
+  provider_name: string;
+  provider_model: string;
+  generation_mode: "llm" | "deterministic_fallback";
+  output: CaseBriefOutput | null;
+  validation: CaseBriefValidation | null;
+  evidence_checksum: string;
+  explanation_checksum: string;
+  integrity_verified: boolean;
+  generation_milliseconds: number;
+  requested_by: string;
+  llm_changed_score: false;
+  llm_classified_case: false;
+  financial_action_taken: false;
+  created_at: string;
+}
+
+export interface CaseBriefCreationResponse {
+  created: boolean;
+  brief: CaseBrief;
+}
+
 export interface CaseEvent {
   sequence_number: number;
   event_type: CaseEventType;
@@ -172,6 +280,8 @@ export interface CaseEvent {
 export interface CaseDetail extends CaseSummary {
   opening_reason: string;
   evidence: CaseRuleEvidence;
+  hybrid_assessments: HybridRiskAssessment[];
+  case_briefs: CaseBrief[];
   events: CaseEvent[];
 }
 
