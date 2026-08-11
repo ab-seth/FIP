@@ -18,6 +18,7 @@ def build_provider_request(evidence: dict[str, object]) -> dict[str, object]:
     return {
         "prompt_version": PROMPT_VERSION,
         "output_schema_version": OUTPUT_SCHEMA_VERSION,
+        "response_format": "json",
         "system_instruction": SYSTEM_INSTRUCTION,
         "evidence": evidence,
         "response_schema": CaseBriefOutput.model_json_schema(),

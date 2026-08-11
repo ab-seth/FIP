@@ -40,6 +40,7 @@ When configured, FIP sends an HTTP `POST` request with JSON containing:
   "model": "configured-model-name",
   "prompt_version": "grounded-case-brief-v1.0.0",
   "output_schema_version": "grounded-case-brief-output-v1.0.0",
+  "response_format": "json",
   "system_instruction": "server-owned safety and grounding instruction",
   "evidence": { "schema_version": "...", "evidence_catalog": {} },
   "response_schema": {}
