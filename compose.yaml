@@ -74,6 +74,20 @@ services:
       api:
         condition: service_healthy
 
+  benchmark:
+    build:
+      context: ./apps/api
+    environment:
+      FIP_ENVIRONMENT: ${FIP_ENVIRONMENT:-development}
+      FIP_DATABASE_URL: ${FIP_DATABASE_URL:-postgresql+psycopg://fip:fip@db:5432/fip}
+      FIP_JWT_SECRET: ${FIP_JWT_SECRET:-development-only-secret-change-before-use}
+      FIP_BENCHMARK_WORKER_POLL_SECONDS: ${FIP_BENCHMARK_WORKER_POLL_SECONDS:-2}
+      FIP_BENCHMARK_WORKER_LEASE_MINUTES: ${FIP_BENCHMARK_WORKER_LEASE_MINUTES:-360}
+    command: ["fip-benchmark-worker"]
+    depends_on:
+      api:
+        condition: service_healthy
+
   web:
     build:
       context: .

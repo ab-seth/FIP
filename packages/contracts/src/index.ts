@@ -29,7 +29,7 @@ export interface TokenResponse {
   expires_in: number;
 }
 
-export type IngestionSourceType = "csv" | "api";
+export type IngestionSourceType = "csv" | "api" | "synthetic";
 export type TransactionChannel =
   | "card_present"
   | "card_not_present"
@@ -304,6 +304,7 @@ export interface DatasetReadiness {
   excluded_integrity_failures: number;
   excluded_feature_contract_mismatches: number;
   excluded_temporal_leakage: number;
+  excluded_synthetic_sources: number;
   feature_set_version: string;
   label_contract_version: string;
   readiness_status: DatasetReadinessStatus;
@@ -617,6 +618,90 @@ export interface ModelEvidence {
   verified_shadow_evaluation_reports: number;
 }
 
+export type BenchmarkRunStatus = "queued" | "running" | "succeeded" | "failed";
+
+export interface BenchmarkRunEvent {
+  sequence_number: number;
+  from_status: BenchmarkRunStatus | null;
+  to_status: BenchmarkRunStatus;
+  detail: string;
+  actor_username: string;
+  previous_event_checksum: string | null;
+  event_checksum: string;
+  created_at: string;
+}
+
+export interface BenchmarkResult {
+  processed_transaction_count: number;
+  rule_assessment_count: number;
+  verified_runtime_observation_count: number;
+  risk_distribution: Record<string, number>;
+  opened_case_count: number;
+  mean_scoring_milliseconds: string | null;
+  p95_scoring_milliseconds: string | null;
+  maximum_scoring_milliseconds: number | null;
+  under_latency_target_count: number;
+  elapsed_milliseconds: number | null;
+  throughput_per_second: string | null;
+  transaction_set_checksum: string;
+  assessment_set_checksum: string;
+  runtime_set_checksum: string;
+  case_set_checksum: string;
+  volume_target_met: boolean;
+  latency_target_met: boolean;
+  pipeline_complete: boolean;
+  acceptance_met: boolean;
+}
+
+export interface BenchmarkRun {
+  id: string;
+  display_id: string;
+  requested_by: string;
+  transaction_count: number;
+  seed: number;
+  reason: string;
+  generator_version: string;
+  configuration_checksum: string;
+  dataset_checksum: string;
+  profile_distribution: Record<string, unknown>;
+  status: BenchmarkRunStatus;
+  attempt_count: number;
+  ingestion_batch_id: string | null;
+  ingestion_batch_display_id: string | null;
+  result: BenchmarkResult | null;
+  report_checksum: string | null;
+  error_code: string | null;
+  error_message: string | null;
+  integrity_verified: boolean;
+  events: BenchmarkRunEvent[];
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  synthetic_only: true;
+  eligible_for_operational_training: false;
+  model_efficacy_claim: false;
+  changes_operational_configuration: false;
+}
+
+export interface BenchmarkRunCreationResponse {
+  created: boolean;
+  run: BenchmarkRun;
+}
+
+export interface BenchmarkEvidence {
+  runs: number;
+  verified_runs: number;
+  active_runs: number;
+  failed_runs: number;
+  accepted_runs: number;
+  maximum_verified_transaction_count: number;
+  latest_accepted_display_id: string | null;
+  latest_accepted_report_checksum: string | null;
+  synthetic_only: true;
+  eligible_for_operational_training: false;
+  model_efficacy_claim: false;
+}
+
 export interface IntegritySummary {
   case_events: number;
   case_records: number;
@@ -635,6 +720,8 @@ export interface IntegritySummary {
   evaluation_report_integrity_failures: number;
   scoring_observation_records: number;
   scoring_observation_integrity_failures: number;
+  benchmark_records: number;
+  benchmark_integrity_failures: number;
 }
 
 export interface VersionLineage {
@@ -650,6 +737,8 @@ export interface VersionLineage {
   label_contract: string;
   split_contract: string;
   operational_training_pipeline: string;
+  synthetic_benchmark_generator: string;
+  synthetic_benchmark_report: string;
 }
 
 export interface ShadowEvaluationReport {
@@ -683,6 +772,7 @@ export interface SystemEvaluationRecord {
   scoring_latency: LatencySummary;
   explanations: ExplanationEvaluation;
   model_evidence: ModelEvidence;
+  benchmark_evidence: BenchmarkEvidence;
   integrity: IntegritySummary;
   versions: VersionLineage;
   gates: EvaluationGate[];
@@ -700,6 +790,7 @@ export type AuditCategory =
   | "hybrid"
   | "dataset"
   | "training"
+  | "benchmark"
   | "evaluation";
 
 export type AuditIntegrityFilter = "all" | "verified" | "failed";

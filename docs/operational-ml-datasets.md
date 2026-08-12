@@ -17,11 +17,14 @@ An outcome is considered only when all of the following remain true at snapshot 
 - a different evaluator approved the outcome for future ML use;
 - the complete case, evidence, event, outcome, and review checksums still verify;
 - the feature snapshot uses the current `semantic-transaction-v1.0.0` contract;
+- the source ingestion batch is operational (`csv` or `api`), never `synthetic`;
 - the feature snapshot and transaction predate the analyst outcome; and
 - the evaluator review existed before the requested snapshot cutoff.
 
 Approved sources that fail integrity, feature-contract, or temporal checks are excluded and counted
 as failed readiness evidence. Inconclusive and rejected outcomes never enter the candidate set.
+Synthetic benchmark outcomes are counted separately and cannot enter a snapshot even after an
+independent approval. Snapshot integrity verification repeats the provenance check.
 
 ## Feature and privacy contract
 

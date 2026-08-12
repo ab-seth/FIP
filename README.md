@@ -9,6 +9,7 @@ FIP is a modular monorepo with independently runnable and deployable services:
 - `apps/web`: Next.js analyst interface.
 - `apps/api`: FastAPI application with modular domain boundaries.
 - `trainer`: separately deployed offline worker built from `apps/api`.
+- `benchmark`: separately deployed fixed-seed system-evidence worker built from `apps/api`.
 - `packages/contracts`: shared API contracts for the web application.
 - `infrastructure`: deployment and environment documentation.
 
@@ -86,6 +87,13 @@ The `/ml/training` workspace provides a durable control plane for that trainer. 
 immutable configurations; a separate worker seals checksum-verified candidate bundles; and all roles
 can inspect the run chain. Registration, artifact installation, and shadow admission remain explicit
 later actions. See [`docs/training-operations-workspace.md`](docs/training-operations-workspace.md).
+
+The `/evaluation/benchmarks` workspace runs deterministic synthetic transactions through the real
+validation, scoring, runtime-observation, and case-routing path. A separate worker seals measured
+10,000-row acceptance evidence, while hard dataset controls prevent every synthetic outcome from
+entering operational model training. This is system-performance evidence, not model-efficacy
+evidence. See
+[`docs/reproducible-system-benchmarks.md`](docs/reproducible-system-benchmarks.md).
 
 An authenticated, read-only audit workspace unifies the material records already owned by cases,
 scoring, model governance, explanations, hybrid evidence, datasets, training, and evaluation. It

@@ -12,7 +12,8 @@ type NavigationKey =
   | "ml_datasets"
   | "ml_training"
   | "ml_models"
-  | "evaluation_record";
+  | "evaluation_record"
+  | "evaluation_benchmarks";
 
 const navigation: Array<{
   key: NavigationKey;
@@ -32,6 +33,12 @@ const navigation: Array<{
   { key: "ml_training", label: "Training operations", marker: "05", href: "/ml/training" },
   { key: "ml_models", label: "Model operations", marker: "06", href: "/ml/models" },
   { key: "evaluation_record", label: "Evaluation record", marker: "07", href: "/evaluation" },
+  {
+    key: "evaluation_benchmarks",
+    label: "System benchmarks",
+    marker: "08",
+    href: "/evaluation/benchmarks",
+  },
 ];
 
 export function WorkspaceShell({

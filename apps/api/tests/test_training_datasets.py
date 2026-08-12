@@ -334,6 +334,7 @@ def test_readiness_requires_both_labels_in_every_temporal_partition(
         integrity_failures=0,
         feature_contract_mismatches=0,
         temporal_leakage=0,
+        synthetic_exclusions=0,
     )
 
     assert all(gate["passed"] for gate in gates)

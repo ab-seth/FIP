@@ -4,6 +4,7 @@ from fip_api.api.routes import (
     admin,
     audit,
     auth,
+    benchmarks,
     cases,
     evaluation,
     health,
@@ -23,4 +24,5 @@ api_router.include_router(transactions.router)
 api_router.include_router(cases.router)
 api_router.include_router(training_datasets.router)
 api_router.include_router(training_runs.router)
+api_router.include_router(benchmarks.router)
 api_router.include_router(evaluation.router)

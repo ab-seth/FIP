@@ -200,6 +200,19 @@ read/write access to candidate storage; the API has read-only access for fresh i
 authorized streaming. Completing a run cannot register or install a model. See
 [`training-operations-workspace.md`](training-operations-workspace.md).
 
+## Synthetic system-benchmark boundary
+
+The `benchmarking` module owns a separate PostgreSQL-backed queue, fixed-seed generator, event
+chain, result verifier, and report contract. Its worker submits canonical synthetic CSV bytes to the
+normal ingestion service, which records `synthetic` provenance and invokes the same semantic
+features, rules, runtime observation, and case-routing services used by operational intake.
+
+The benchmark worker cannot train or register a model, change a model lifecycle, or modify scoring
+configuration. The operational dataset module excludes synthetic provenance during readiness and
+rechecks it during snapshot verification. The Evaluation Record accepts benchmark volume only from
+one complete, checksum-verified sealed run; aggregate database volume is insufficient. See
+[`reproducible-system-benchmarks.md`](reproducible-system-benchmarks.md).
+
 ## Design system
 
 The approved frontend direction is **Forensic Ledger**: a warm archival canvas, white evidence surfaces, compact navigation, editorial case hierarchy, and restrained risk accents. LLM output is presented as a cited case brief rather than a chat interface.

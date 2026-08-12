@@ -23,7 +23,7 @@ Supported query parameters are:
 
 | Parameter | Values | Default |
 | --- | --- | --- |
-| `category` | `case`, `model`, `scoring`, `explanation`, `hybrid`, `dataset`, `training`, `evaluation` | all categories |
+| `category` | `case`, `model`, `scoring`, `explanation`, `hybrid`, `dataset`, `training`, `benchmark`, `evaluation` | all categories |
 | `integrity` | `all`, `verified`, `failed` | `all` |
 | `q` | Case/model/transaction reference, actor, action, detail, or checksum text | none |
 | `page` | Integer at least 1 | 1 |
@@ -41,6 +41,7 @@ read-only and changes no operational state.
 - governed hybrid evidence assessments;
 - operational dataset snapshots;
 - candidate training-run lifecycle events; and
+- synthetic system-benchmark lifecycle events; and
 - immutable shadow-model evaluation reports.
 
 Rows link back to the owning case dossier, dataset archive, model evidence, or evaluation archive.

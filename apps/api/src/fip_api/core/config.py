@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     training_artifact_max_bytes: int = Field(default=256 * 1024 * 1024, ge=1024)
     training_worker_poll_seconds: int = Field(default=2, ge=1, le=60)
     training_worker_lease_minutes: int = Field(default=360, ge=30, le=1440)
+    benchmark_worker_poll_seconds: int = Field(default=2, ge=1, le=60)
+    benchmark_worker_lease_minutes: int = Field(default=360, ge=30, le=1440)
     llm_endpoint: str | None = None
     llm_api_key: SecretStr | None = None
     llm_model: str | None = None

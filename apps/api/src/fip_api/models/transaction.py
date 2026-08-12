@@ -14,6 +14,7 @@ from fip_api.db.base import Base
 class IngestionSourceType(StrEnum):
     CSV = "csv"
     API = "api"
+    SYNTHETIC = "synthetic"
 
 
 class TransactionChannel(StrEnum):
@@ -29,7 +30,10 @@ class IngestionBatch(Base):
     __table_args__ = (
         CheckConstraint("byte_count > 0", name="ck_ingestion_batches_byte_count_positive"),
         CheckConstraint("row_count > 0", name="ck_ingestion_batches_row_count_positive"),
-        CheckConstraint("source_type IN ('csv', 'api')", name="ck_ingestion_batches_source_type"),
+        CheckConstraint(
+            "source_type IN ('csv', 'api', 'synthetic')",
+            name="ck_ingestion_batches_source_type",
+        ),
     )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))

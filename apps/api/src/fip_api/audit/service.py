@@ -7,6 +7,7 @@ from math import ceil
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from fip_api.benchmarking import verify_benchmark_run_integrity
 from fip_api.cases import verify_case_integrity
 from fip_api.explainability import verify_case_brief_integrity
 from fip_api.hybrid_scoring import verify_hybrid_assessment_integrity
@@ -25,7 +26,11 @@ from fip_api.models import (
     ScoringRuntimeObservation,
     ShadowModelEvaluationReport,
     ShadowModelPrediction,
+    SyntheticBenchmarkRun,
+    SyntheticBenchmarkRunEvent,
     Transaction,
+    TransactionFeatureSnapshot,
+    TransactionRuleAssessment,
     User,
 )
 from fip_api.schemas.audit import (
@@ -35,7 +40,7 @@ from fip_api.schemas.audit import (
     AuditLedgerResponse,
     AuditLedgerSummaryResponse,
 )
-from fip_api.scoring import verify_scoring_runtime_observation
+from fip_api.scoring import verify_scoring_runtime_observation_components
 from fip_api.training_datasets import verify_dataset_integrity
 from fip_api.training_operations import (
     get_training_artifact_store,
@@ -131,6 +136,7 @@ def _collect_entries(db: Session) -> list[AuditLedgerEntryResponse]:
     )
     entries.extend(_dataset_entries(db, users))
     entries.extend(_training_entries(db))
+    entries.extend(_benchmark_entries(db))
     entries.extend(_evaluation_entries(db, models, users))
     return entries
 
@@ -261,10 +267,19 @@ def _scoring_entries(
     cases_by_transaction: dict[str, AnalystCase],
 ) -> list[AuditLedgerEntryResponse]:
     entries: list[AuditLedgerEntryResponse] = []
+    snapshots = {
+        snapshot.id: snapshot for snapshot in db.scalars(select(TransactionFeatureSnapshot)).all()
+    }
+    assessments = {
+        assessment.id: assessment
+        for assessment in db.scalars(select(TransactionRuleAssessment)).all()
+    }
     observations = db.scalars(select(ScoringRuntimeObservation)).all()
     for observation in observations:
         transaction = transactions.get(observation.transaction_id)
         case = cases_by_transaction.get(observation.transaction_id)
+        snapshot = snapshots.get(observation.feature_snapshot_id)
+        assessment = assessments.get(observation.rule_assessment_id)
         subject_label = (
             transaction.external_transaction_id
             if transaction is not None
@@ -285,7 +300,17 @@ def _scoring_entries(
                 occurred_at=_utc_datetime(observation.created_at),
                 checksum=observation.observation_checksum,
                 previous_checksum=None,
-                integrity_verified=verify_scoring_runtime_observation(db, observation),
+                integrity_verified=(
+                    transaction is not None
+                    and snapshot is not None
+                    and assessment is not None
+                    and verify_scoring_runtime_observation_components(
+                        observation,
+                        transaction,
+                        snapshot,
+                        assessment,
+                    )
+                ),
                 href=f"/cases/{case.id}" if case is not None else "/",
                 metadata={
                     "rule_assessment_id": observation.rule_assessment_id,
@@ -492,6 +517,52 @@ def _training_event_action(status: str) -> str:
         "succeeded": "Candidate bundle sealed",
         "failed": "Candidate training failed",
     }.get(status, "Candidate training event recorded")
+
+
+def _benchmark_entries(db: Session) -> list[AuditLedgerEntryResponse]:
+    entries: list[AuditLedgerEntryResponse] = []
+    runs = {run.id: run for run in db.scalars(select(SyntheticBenchmarkRun)).all()}
+    integrity = {run.id: verify_benchmark_run_integrity(db, run) for run in runs.values()}
+    events = db.scalars(select(SyntheticBenchmarkRunEvent)).all()
+    for event in events:
+        run = runs.get(event.benchmark_run_id)
+        if run is None:
+            continue
+        entries.append(
+            AuditLedgerEntryResponse(
+                id=f"benchmark-run-event:{event.id}",
+                category="benchmark",
+                action=_benchmark_event_action(event.to_status),
+                subject_id=run.id,
+                subject_label=run.display_id,
+                actor_username=event.actor_username,
+                detail=event.detail,
+                sequence_number=event.sequence_number,
+                occurred_at=_utc_datetime(event.created_at),
+                checksum=event.event_checksum,
+                previous_checksum=event.previous_event_checksum,
+                integrity_verified=integrity[run.id],
+                href="/evaluation/benchmarks",
+                metadata={
+                    "status": event.to_status,
+                    "transaction_count": run.transaction_count,
+                    "dataset_checksum": run.dataset_checksum,
+                    "report_checksum": run.report_checksum or "pending",
+                    "synthetic_only": True,
+                    "eligible_for_operational_training": False,
+                },
+            )
+        )
+    return entries
+
+
+def _benchmark_event_action(status: str) -> str:
+    return {
+        "queued": "Synthetic benchmark queued",
+        "running": "Synthetic benchmark started",
+        "succeeded": "Synthetic benchmark report sealed",
+        "failed": "Synthetic benchmark failed",
+    }.get(status, "Synthetic benchmark event recorded")
 
 
 def _case_event_copy(event: CaseEvent) -> tuple[str, str]:
