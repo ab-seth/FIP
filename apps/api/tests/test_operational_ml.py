@@ -132,6 +132,9 @@ def test_training_writes_candidate_only_auditable_bundle(
 
     manifest = json.loads((output / "run-manifest.json").read_text(encoding="utf-8"))
     assert manifest["candidate_only"] is True
+    assert manifest["automatic_registration"] is False
+    assert manifest["automatic_shadow_promotion"] is False
+    assert manifest["live_scoring"] is False
     for relative_path, checksum in manifest["files"].items():
         assert sha256_file(output / relative_path) == checksum
 

@@ -33,6 +33,11 @@ from fip_api.models.training_dataset import (
     OperationalDatasetRow,
     OperationalDatasetSnapshot,
 )
+from fip_api.models.training_run import (
+    OperationalTrainingRun,
+    OperationalTrainingRunEvent,
+    TrainingRunStatus,
+)
 from fip_api.models.transaction import (
     IngestionBatch,
     IngestionSourceType,
@@ -64,6 +69,8 @@ __all__ = [
     "OutcomeReviewStatus",
     "OperationalDatasetRow",
     "OperationalDatasetSnapshot",
+    "OperationalTrainingRun",
+    "OperationalTrainingRunEvent",
     "RegisteredModel",
     "RuleRiskLevel",
     "ScoringRuntimeObservation",
@@ -73,6 +80,7 @@ __all__ = [
     "TransactionChannel",
     "TransactionFeatureSnapshot",
     "TransactionRuleAssessment",
+    "TrainingRunStatus",
     "User",
     "UserRole",
 ]

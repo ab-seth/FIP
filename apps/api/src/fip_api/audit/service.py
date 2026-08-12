@@ -19,6 +19,8 @@ from fip_api.models import (
     HybridRiskAssessment,
     ModelLifecycleEvent,
     OperationalDatasetSnapshot,
+    OperationalTrainingRun,
+    OperationalTrainingRunEvent,
     RegisteredModel,
     ScoringRuntimeObservation,
     ShadowModelEvaluationReport,
@@ -35,6 +37,10 @@ from fip_api.schemas.audit import (
 )
 from fip_api.scoring import verify_scoring_runtime_observation
 from fip_api.training_datasets import verify_dataset_integrity
+from fip_api.training_operations import (
+    get_training_artifact_store,
+    verify_training_run_integrity,
+)
 
 AUDIT_LEDGER_SCHEMA_VERSION = "audit-ledger-v1.0.0"
 
@@ -124,6 +130,7 @@ def _collect_entries(db: Session) -> list[AuditLedgerEntryResponse]:
         )
     )
     entries.extend(_dataset_entries(db, users))
+    entries.extend(_training_entries(db))
     entries.extend(_evaluation_entries(db, models, users))
     return entries
 
@@ -436,6 +443,55 @@ def _evaluation_entries(
             )
         )
     return entries
+
+
+def _training_entries(
+    db: Session,
+) -> list[AuditLedgerEntryResponse]:
+    entries: list[AuditLedgerEntryResponse] = []
+    store = get_training_artifact_store()
+    runs = {run.id: run for run in db.scalars(select(OperationalTrainingRun)).all()}
+    integrity = {
+        run.id: verify_training_run_integrity(db, run, store=store) for run in runs.values()
+    }
+    events = db.scalars(select(OperationalTrainingRunEvent)).all()
+    for event in events:
+        run = runs.get(event.training_run_id)
+        if run is None:
+            continue
+        entries.append(
+            AuditLedgerEntryResponse(
+                id=f"training-run-event:{event.id}",
+                category="training",
+                action=_training_event_action(event.to_status),
+                subject_id=run.id,
+                subject_label=f"{run.display_id} / {run.candidate_version}",
+                actor_username=event.actor_username,
+                detail=event.detail,
+                sequence_number=event.sequence_number,
+                occurred_at=_utc_datetime(event.created_at),
+                checksum=event.event_checksum,
+                previous_checksum=event.previous_event_checksum,
+                integrity_verified=integrity[run.id],
+                href="/ml/training",
+                metadata={
+                    "status": event.to_status,
+                    "dataset_checksum": run.dataset_checksum,
+                    "configuration_checksum": run.configuration_checksum,
+                    "bundle_checksum": run.bundle_checksum or "pending",
+                },
+            )
+        )
+    return entries
+
+
+def _training_event_action(status: str) -> str:
+    return {
+        "queued": "Candidate training queued",
+        "running": "Candidate training started",
+        "succeeded": "Candidate bundle sealed",
+        "failed": "Candidate training failed",
+    }.get(status, "Candidate training event recorded")
 
 
 def _case_event_copy(event: CaseEvent) -> tuple[str, str]:

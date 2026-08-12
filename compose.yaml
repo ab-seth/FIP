@@ -31,6 +31,8 @@ services:
       FIP_TRANSACTION_UPLOAD_MAX_ROWS: ${FIP_TRANSACTION_UPLOAD_MAX_ROWS:-10000}
       FIP_MODEL_ARTIFACT_ROOT: ${FIP_MODEL_ARTIFACT_ROOT:-/var/lib/fip/model-artifacts}
       FIP_MODEL_ARTIFACT_MAX_BYTES: ${FIP_MODEL_ARTIFACT_MAX_BYTES:-268435456}
+      FIP_TRAINING_ARTIFACT_ROOT: ${FIP_TRAINING_ARTIFACT_ROOT:-/var/lib/fip/training-artifacts}
+      FIP_TRAINING_ARTIFACT_MAX_BYTES: ${FIP_TRAINING_ARTIFACT_MAX_BYTES:-268435456}
       FIP_LLM_ENDPOINT: ${FIP_LLM_ENDPOINT:-}
       FIP_LLM_API_KEY: ${FIP_LLM_API_KEY:-}
       FIP_LLM_MODEL: ${FIP_LLM_MODEL:-}
@@ -44,6 +46,7 @@ services:
       - "8000:8000"
     volumes:
       - fip_model_artifacts:/var/lib/fip/model-artifacts
+      - fip_training_artifacts:/var/lib/fip/training-artifacts:ro
     depends_on:
       db:
         condition: service_healthy
@@ -52,6 +55,24 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+
+  trainer:
+    build:
+      context: ./apps/api
+    environment:
+      FIP_ENVIRONMENT: ${FIP_ENVIRONMENT:-development}
+      FIP_DATABASE_URL: ${FIP_DATABASE_URL:-postgresql+psycopg://fip:fip@db:5432/fip}
+      FIP_JWT_SECRET: ${FIP_JWT_SECRET:-development-only-secret-change-before-use}
+      FIP_TRAINING_ARTIFACT_ROOT: ${FIP_TRAINING_ARTIFACT_ROOT:-/var/lib/fip/training-artifacts}
+      FIP_TRAINING_ARTIFACT_MAX_BYTES: ${FIP_TRAINING_ARTIFACT_MAX_BYTES:-268435456}
+      FIP_TRAINING_WORKER_POLL_SECONDS: ${FIP_TRAINING_WORKER_POLL_SECONDS:-2}
+      FIP_TRAINING_WORKER_LEASE_MINUTES: ${FIP_TRAINING_WORKER_LEASE_MINUTES:-360}
+    command: ["fip-training-worker"]
+    volumes:
+      - fip_training_artifacts:/var/lib/fip/training-artifacts
+    depends_on:
+      api:
+        condition: service_healthy
 
   web:
     build:
@@ -69,3 +90,4 @@ services:
 volumes:
   fip_model_artifacts:
   fip_postgres_data:
+  fip_training_artifacts:

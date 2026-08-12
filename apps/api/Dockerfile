@@ -7,7 +7,7 @@ WORKDIR /app
 
 RUN addgroup --system fip \
     && adduser --system --ingroup fip fip \
-    && mkdir -p /var/lib/fip/model-artifacts \
+    && mkdir -p /var/lib/fip/model-artifacts /var/lib/fip/training-artifacts \
     && chown -R fip:fip /var/lib/fip
 
 COPY pyproject.toml README.md ./

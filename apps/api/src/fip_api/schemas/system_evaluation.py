@@ -59,6 +59,9 @@ class ExplanationEvaluationResponse(BaseModel):
 
 
 class ModelEvidenceResponse(BaseModel):
+    training_runs: int
+    sealed_candidate_runs: int
+    verified_sealed_candidate_runs: int
     registered_models: int
     verified_model_lineages: int
     shadow_predictions: int
@@ -79,6 +82,8 @@ class IntegritySummaryResponse(BaseModel):
     hybrid_integrity_failures: int
     dataset_records: int
     dataset_integrity_failures: int
+    training_run_records: int
+    training_run_integrity_failures: int
     evaluation_report_records: int
     evaluation_report_integrity_failures: int
     scoring_observation_records: int
@@ -97,6 +102,7 @@ class VersionLineageResponse(BaseModel):
     model_evaluation_report: str
     label_contract: str
     split_contract: str
+    operational_training_pipeline: str
 
 
 class SystemEvaluationRecordResponse(BaseModel):

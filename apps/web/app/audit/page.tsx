@@ -20,6 +20,7 @@ const categories: AuditCategory[] = [
   "explanation",
   "hybrid",
   "dataset",
+  "training",
   "evaluation",
 ];
 
