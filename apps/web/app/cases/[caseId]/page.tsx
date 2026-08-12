@@ -3,10 +3,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/lib/auth/server";
-import { getCase, getCases } from "@/lib/cases/server";
+import { getCase, getCases, getShadowPredictions } from "@/lib/cases/server";
 
 import { CaseActions } from "../../components/case-actions";
 import { GroundedCaseBrief } from "../../components/case-brief";
+import { HybridRiskEvidence } from "../../components/hybrid-risk-evidence";
 import { WorkspaceShell } from "../../components/workspace-shell";
 
 export default async function CaseDossierPage({
@@ -19,6 +20,7 @@ export default async function CaseDossierPage({
   const { caseId } = await params;
   const [caseDetail, cases] = await Promise.all([getCase(caseId), getCases()]);
   if (!caseDetail) notFound();
+  const shadowPredictions = await getShadowPredictions(caseDetail.transaction.id);
   const reviewCount = cases.filter((item) => item.status !== "classified").length;
 
   return (
@@ -86,6 +88,14 @@ export default async function CaseDossierPage({
                 ))}
               </ol>
             </section>
+
+            <HybridRiskEvidence
+              assessments={caseDetail.hybrid_assessments}
+              predictions={shadowPredictions}
+              role={user.role}
+              ruleScore={caseDetail.risk_score}
+              transactionId={caseDetail.transaction.id}
+            />
 
             <GroundedCaseBrief
               caseBriefs={caseDetail.case_briefs}

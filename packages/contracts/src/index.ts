@@ -452,6 +452,8 @@ export interface ShadowPrediction {
   model_id: string;
   model_key: string;
   model_version: string;
+  model_kind: ModelKind;
+  runtime_contract: ModelRuntimeContract;
   feature_set_version: string;
   feature_snapshot_checksum: string;
   authorization_event_checksum: string;
@@ -476,6 +478,11 @@ export interface ShadowRunResponse {
   shadow_only: true;
   affects_operational_score: false;
   predictions: ShadowPrediction[];
+}
+
+export interface HybridAssessmentCreationResponse {
+  created: boolean;
+  assessment: HybridRiskAssessment;
 }
 
 export interface ShadowEvaluationCreationResponse {

@@ -357,6 +357,10 @@ def test_hybrid_score_is_versioned_replay_safe_and_non_interventional(
         f"/api/v1/transactions/{transaction_id}/hybrid-assessments",
         headers=analyst_headers,
     )
+    predictions = client.get(
+        f"/api/v1/transactions/{transaction_id}/shadow-predictions",
+        headers=analyst_headers,
+    )
 
     assert denied.status_code == 403
     assert created.status_code == 201
@@ -394,6 +398,11 @@ def test_hybrid_score_is_versioned_replay_safe_and_non_interventional(
     assert replayed.json()["assessment"]["id"] == body["assessment"]["id"]
     assert listed.status_code == 200
     assert listed.json() == [body["assessment"]]
+    assert predictions.status_code == 200
+    prediction_by_kind = {item["model_kind"]: item for item in predictions.json()}
+    assert set(prediction_by_kind) == {"supervised", "anomaly"}
+    assert prediction_by_kind["supervised"]["runtime_contract"] == "binary-probability-v1"
+    assert prediction_by_kind["anomaly"]["runtime_contract"] == "anomaly-score-v1"
     assert db_session.scalar(select(func.count()).select_from(HybridRiskAssessment)) == 1
     assert db_session.scalar(select(func.count()).select_from(ShadowModelPrediction)) == 2
     assert db_session.scalar(select(func.count()).select_from(TransactionRuleAssessment)) == 1

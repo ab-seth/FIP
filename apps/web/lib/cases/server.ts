@@ -1,4 +1,4 @@
-import type { CaseDetail, CaseSummary } from "@fip/contracts";
+import type { CaseDetail, CaseSummary, ShadowPrediction } from "@fip/contracts";
 import { cookies } from "next/headers";
 
 import { getApiUrl, SESSION_COOKIE } from "@/lib/auth/constants";
@@ -9,6 +9,14 @@ export async function getCases(): Promise<CaseSummary[]> {
 
 export async function getCase(caseId: string): Promise<CaseDetail | null> {
   return caseRequest(`/api/v1/cases/${encodeURIComponent(caseId)}`);
+}
+
+export async function getShadowPredictions(transactionId: string): Promise<ShadowPrediction[]> {
+  return (
+    (await caseRequest(
+      `/api/v1/transactions/${encodeURIComponent(transactionId)}/shadow-predictions`,
+    )) ?? []
+  );
 }
 
 async function caseRequest<T>(path: string): Promise<T | null> {

@@ -46,7 +46,9 @@ checksums, and reports. See
 A governed hybrid evidence service can combine one verified rule assessment with explicit
 supervised and anomaly shadow predictions under the versioned 20/60/20 policy. It preserves exact
 lineage and contributions, fails closed on missing or damaged inputs, and cannot change case or
-transaction state. See [`docs/hybrid-risk-evidence.md`](docs/hybrid-risk-evidence.md).
+transaction state. The case dossier exposes the model factors and lets authorized governance roles
+assemble only an explicitly selected, verified prediction pair. See
+[`docs/hybrid-risk-evidence.md`](docs/hybrid-risk-evidence.md).
 
 Analysts can generate an immutable, cited case brief from the verified rules evidence and, when
 explicitly selected, one verified hybrid assessment. Provider output is schema-checked and
