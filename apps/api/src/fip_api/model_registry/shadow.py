@@ -17,6 +17,7 @@ from fip_api.model_registry.service import (
     verify_model_lineage,
 )
 from fip_api.models import (
+    ModelKind,
     ModelLifecycleEvent,
     ModelLifecycleStatus,
     ModelRuntimeContract,
@@ -174,6 +175,8 @@ def build_shadow_prediction_response(
         model_id=model.id,
         model_key=model.model_key,
         model_version=model.version,
+        model_kind=ModelKind(model.kind),
+        runtime_contract=ModelRuntimeContract(model.runtime_contract),
         feature_set_version=snapshot.feature_set_version,
         feature_snapshot_checksum=snapshot.snapshot_checksum,
         authorization_event_checksum=authorization_event.event_checksum,

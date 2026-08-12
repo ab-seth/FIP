@@ -61,9 +61,33 @@ Authenticated users can list the recorded evidence:
 GET /api/v1/transactions/{transaction_id}/hybrid-assessments
 ```
 
+They can also inspect the transaction's candidate prediction evidence:
+
+```http
+GET /api/v1/transactions/{transaction_id}/shadow-predictions
+```
+
+Each prediction response states its `model_kind` and `runtime_contract` directly, alongside the
+model version, score, local factors, checksum, and integrity result. Callers therefore do not need
+to infer whether a prediction is supervised or anomaly evidence from a model name.
+
 If the deterministic rules already opened a case, `GET /api/v1/cases/{case_id}` includes the same
 assessment under `hybrid_assessments`. This is a read-only dossier projection; creating the hybrid
 record does not append a case event or alter case status, priority, or opening evidence.
+
+## Case-dossier workspace
+
+The case dossier presents the hybrid record as a separate machine-learning evidence layer next to
+the deterministic rule ledger. It shows the fixed rule, supervised, and anomaly contributions; the
+model versions and local factors behind available predictions; the versioned policy; and the
+assessment proof. The original rules-only score remains visible as the operational score.
+
+Administrators and evaluators can assemble an assessment in the dossier only by explicitly
+selecting one integrity-verified supervised prediction and one integrity-verified anomaly
+prediction. Failed predictions remain visible for investigation but are excluded from the
+selection controls. The server repeats every type, lineage, authorization, and checksum check; the
+browser is not a trust boundary. Analysts and managers receive the same evidence view without the
+creation control.
 
 ## Evidence and integrity
 
@@ -99,6 +123,5 @@ band, or checksum.
 
 - The policy is not calibrated or validated for production use.
 - Shadow inputs are comparison evidence, not production-approved models.
-- No automatic batch assembly, case integration, alerting, transaction action, or external score
-  submission occurs.
+- No automatic batch assembly, alerting, transaction action, or external score submission occurs.
 - Application checksums are tamper-evident records, not digital signatures or a blockchain.

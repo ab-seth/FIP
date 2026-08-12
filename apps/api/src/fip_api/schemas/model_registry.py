@@ -124,6 +124,8 @@ class ShadowPredictionResponse(BaseModel):
     model_id: str
     model_key: str
     model_version: str
+    model_kind: ModelKind
+    runtime_contract: ModelRuntimeContract
     feature_set_version: str
     feature_snapshot_checksum: str
     authorization_event_checksum: str
