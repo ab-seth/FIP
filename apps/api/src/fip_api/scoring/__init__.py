@@ -5,6 +5,7 @@ from fip_api.scoring.service import (
     find_current_rule_assessment,
     verify_rule_assessment_integrity,
     verify_scoring_runtime_observation,
+    verify_scoring_runtime_observation_components,
 )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "find_current_rule_assessment",
     "verify_rule_assessment_integrity",
     "verify_scoring_runtime_observation",
+    "verify_scoring_runtime_observation_components",
 ]

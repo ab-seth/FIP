@@ -8,6 +8,11 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
+from fip_api.benchmarking import (
+    BENCHMARK_REPORT_SCHEMA_VERSION,
+    GENERATOR_VERSION,
+    verify_benchmark_run_integrity,
+)
 from fip_api.cases import build_case_summary_response, list_cases
 from fip_api.core.checksums import canonical_json_checksum
 from fip_api.db.base import Base
@@ -38,13 +43,17 @@ from fip_api.models import (
     ScoringRuntimeObservation,
     ShadowModelEvaluationReport,
     ShadowModelPrediction,
+    SyntheticBenchmarkRun,
+    SyntheticBenchmarkRunEvent,
     Transaction,
+    TransactionFeatureSnapshot,
     TransactionRuleAssessment,
 )
 from fip_api.operational_ml import PIPELINE_VERSION
 from fip_api.rules import RISK_BAND_VERSION, RULESET_VERSION
 from fip_api.schemas.explanation import CaseBriefValidationResponse
 from fip_api.schemas.system_evaluation import (
+    BenchmarkEvidenceResponse,
     EvaluationGateResponse,
     EvaluationVolumeResponse,
     ExplanationEvaluationResponse,
@@ -56,7 +65,7 @@ from fip_api.schemas.system_evaluation import (
 )
 from fip_api.scoring import (
     SCORING_RUNTIME_OBSERVATION_SCHEMA_VERSION,
-    verify_scoring_runtime_observation,
+    verify_scoring_runtime_observation_components,
 )
 from fip_api.training_datasets import verify_dataset_integrity
 from fip_api.training_datasets.service import (
@@ -68,7 +77,7 @@ from fip_api.training_operations import (
     verify_training_run_integrity,
 )
 
-SYSTEM_EVALUATION_SCHEMA_VERSION = "system-evaluation-record-v1.1.0"
+SYSTEM_EVALUATION_SCHEMA_VERSION = "system-evaluation-record-v1.2.0"
 SCORING_LATENCY_TARGET_MILLISECONDS = 2_000
 LLM_LATENCY_TARGET_MILLISECONDS = 10_000
 BENCHMARK_VOLUME_TARGET = 10_000
@@ -110,15 +119,37 @@ def build_system_evaluation_record(db: Session) -> SystemEvaluationRecordRespons
             )
         ).all()
     )
-    reports = list_all_shadow_evaluations(db)
-    scoring_observations = list(
+    benchmark_runs = list(
         db.scalars(
-            select(ScoringRuntimeObservation).order_by(
-                ScoringRuntimeObservation.created_at,
-                ScoringRuntimeObservation.id,
+            select(SyntheticBenchmarkRun).order_by(
+                SyntheticBenchmarkRun.created_at,
+                SyntheticBenchmarkRun.id,
             )
         ).all()
     )
+    reports = list_all_shadow_evaluations(db)
+    scoring_rows = db.execute(
+        select(
+            ScoringRuntimeObservation,
+            Transaction,
+            TransactionFeatureSnapshot,
+            TransactionRuleAssessment,
+        )
+        .outerjoin(Transaction, Transaction.id == ScoringRuntimeObservation.transaction_id)
+        .outerjoin(
+            TransactionFeatureSnapshot,
+            TransactionFeatureSnapshot.id == ScoringRuntimeObservation.feature_snapshot_id,
+        )
+        .outerjoin(
+            TransactionRuleAssessment,
+            TransactionRuleAssessment.id == ScoringRuntimeObservation.rule_assessment_id,
+        )
+        .order_by(
+            ScoringRuntimeObservation.created_at,
+            ScoringRuntimeObservation.id,
+        )
+    ).all()
+    scoring_observations = [observation for observation, _, _, _ in scoring_rows]
 
     case_integrity = [summary.integrity_verified for summary in case_summaries]
     model_integrity = [verify_model_lineage(db, model) for model in models]
@@ -129,9 +160,19 @@ def build_system_evaluation_record(db: Session) -> SystemEvaluationRecordRespons
     training_run_integrity = [
         verify_training_run_integrity(db, run, store=training_store) for run in training_runs
     ]
+    benchmark_integrity = [verify_benchmark_run_integrity(db, run) for run in benchmark_runs]
     report_integrity = [verify_evaluation_report_integrity(db, report) for report in reports]
     scoring_integrity = [
-        verify_scoring_runtime_observation(db, observation) for observation in scoring_observations
+        transaction is not None
+        and snapshot is not None
+        and assessment is not None
+        and verify_scoring_runtime_observation_components(
+            observation,
+            transaction,
+            snapshot,
+            assessment,
+        )
+        for observation, transaction, snapshot, assessment in scoring_rows
     ]
 
     risk_counts = _group_counts(db, TransactionRuleAssessment.risk_level)
@@ -180,6 +221,8 @@ def build_system_evaluation_record(db: Session) -> SystemEvaluationRecordRespons
         evaluation_report_integrity_failures=report_integrity.count(False),
         scoring_observation_records=len(scoring_observations),
         scoring_observation_integrity_failures=scoring_integrity.count(False),
+        benchmark_records=len(benchmark_runs),
+        benchmark_integrity_failures=benchmark_integrity.count(False),
     )
     model_evidence = ModelEvidenceResponse(
         training_runs=len(training_runs),
@@ -195,6 +238,34 @@ def build_system_evaluation_record(db: Session) -> SystemEvaluationRecordRespons
         shadow_evaluation_reports=len(reports),
         verified_shadow_evaluation_reports=report_integrity.count(True),
     )
+    verified_benchmarks = [
+        run
+        for run, verified in zip(benchmark_runs, benchmark_integrity, strict=True)
+        if verified and run.status == "succeeded" and run.result_summary is not None
+    ]
+    accepted_benchmarks: list[SyntheticBenchmarkRun] = []
+    for run in verified_benchmarks:
+        summary = run.result_summary
+        if summary is not None and summary.get("acceptance_met") is True:
+            accepted_benchmarks.append(run)
+    latest_accepted = accepted_benchmarks[-1] if accepted_benchmarks else None
+    benchmark_evidence = BenchmarkEvidenceResponse(
+        runs=len(benchmark_runs),
+        verified_runs=benchmark_integrity.count(True),
+        active_runs=sum(run.status in {"queued", "running"} for run in benchmark_runs),
+        failed_runs=sum(run.status == "failed" for run in benchmark_runs),
+        accepted_runs=len(accepted_benchmarks),
+        maximum_verified_transaction_count=max(
+            (run.transaction_count for run in verified_benchmarks),
+            default=0,
+        ),
+        latest_accepted_display_id=(
+            latest_accepted.display_id if latest_accepted is not None else None
+        ),
+        latest_accepted_report_checksum=(
+            latest_accepted.report_checksum if latest_accepted is not None else None
+        ),
+    )
     versions = VersionLineageResponse(
         feature_set=FEATURE_SET_VERSION,
         ruleset=RULESET_VERSION,
@@ -208,13 +279,15 @@ def build_system_evaluation_record(db: Session) -> SystemEvaluationRecordRespons
         label_contract=LABEL_CONTRACT_VERSION,
         split_contract=SPLIT_CONTRACT_VERSION,
         operational_training_pipeline=PIPELINE_VERSION,
+        synthetic_benchmark_generator=GENERATOR_VERSION,
+        synthetic_benchmark_report=BENCHMARK_REPORT_SCHEMA_VERSION,
     )
     gates = _evaluation_gates(
-        volume=volume,
         scoring_latency=scoring_latency,
         explanations=explanations,
         integrity=integrity,
         model_evidence=model_evidence,
+        benchmark_evidence=benchmark_evidence,
     )
     gate_statuses = {gate.status for gate in gates}
     overall_status = (
@@ -234,6 +307,7 @@ def build_system_evaluation_record(db: Session) -> SystemEvaluationRecordRespons
         "scoring_latency": scoring_latency.model_dump(mode="json"),
         "explanations": explanations.model_dump(mode="json"),
         "model_evidence": model_evidence.model_dump(mode="json"),
+        "benchmark_evidence": benchmark_evidence.model_dump(mode="json"),
         "integrity": integrity.model_dump(mode="json"),
         "versions": versions.model_dump(mode="json"),
         "gates": [gate.model_dump(mode="json") for gate in gates],
@@ -298,11 +372,11 @@ def _explanation_evaluation(
 
 def _evaluation_gates(
     *,
-    volume: EvaluationVolumeResponse,
     scoring_latency: LatencySummaryResponse,
     explanations: ExplanationEvaluationResponse,
     integrity: IntegritySummaryResponse,
     model_evidence: ModelEvidenceResponse,
+    benchmark_evidence: BenchmarkEvidenceResponse,
 ) -> list[EvaluationGateResponse]:
     integrity_failures = sum(
         (
@@ -314,6 +388,7 @@ def _evaluation_gates(
             integrity.training_run_integrity_failures,
             integrity.evaluation_report_integrity_failures,
             integrity.scoring_observation_integrity_failures,
+            integrity.benchmark_integrity_failures,
         )
     )
     integrity_records = sum(
@@ -326,17 +401,25 @@ def _evaluation_gates(
             integrity.training_run_records,
             integrity.evaluation_report_records,
             integrity.scoring_observation_records,
+            integrity.benchmark_records,
         )
     )
     return [
         EvaluationGateResponse(
             gate="transaction_benchmark_volume",
             status=(
-                "passed" if volume.transactions >= BENCHMARK_VOLUME_TARGET else "not_demonstrated"
+                "passed"
+                if benchmark_evidence.accepted_runs > 0
+                else "failed"
+                if benchmark_evidence.failed_runs > 0
+                or benchmark_evidence.verified_runs < benchmark_evidence.runs
+                else "not_demonstrated"
             ),
-            observed=volume.transactions,
-            target=f">= {BENCHMARK_VOLUME_TARGET} scored transactions in one environment",
-            detail="Current volume is evidence, not a synthetic capability claim.",
+            observed=benchmark_evidence.maximum_verified_transaction_count,
+            target=f">= {BENCHMARK_VOLUME_TARGET} transactions in one sealed benchmark run",
+            detail=(
+                "Requires a verified fixed-seed run through validation, scoring, and case routing."
+            ),
         ),
         EvaluationGateResponse(
             gate="deterministic_scoring_latency",
@@ -463,6 +546,7 @@ def _evidence_as_of(
             db.scalar(select(func.max(OperationalTrainingRunEvent.created_at))),
             db.scalar(select(func.max(ShadowModelEvaluationReport.created_at))),
             db.scalar(select(func.max(ScoringRuntimeObservation.created_at))),
+            db.scalar(select(func.max(SyntheticBenchmarkRunEvent.created_at))),
         )
         if value is not None
     ]

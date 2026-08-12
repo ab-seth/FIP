@@ -174,6 +174,20 @@ def verify_scoring_runtime_observation(
     assessment = db.get(TransactionRuleAssessment, observation.rule_assessment_id)
     if transaction is None or snapshot is None or assessment is None:
         return False
+    return verify_scoring_runtime_observation_components(
+        observation,
+        transaction,
+        snapshot,
+        assessment,
+    )
+
+
+def verify_scoring_runtime_observation_components(
+    observation: ScoringRuntimeObservation,
+    transaction: Transaction,
+    snapshot: TransactionFeatureSnapshot,
+    assessment: TransactionRuleAssessment,
+) -> bool:
     expected_checksum = canonical_json_checksum(
         _runtime_observation_facts(
             external_transaction_id=transaction.external_transaction_id,

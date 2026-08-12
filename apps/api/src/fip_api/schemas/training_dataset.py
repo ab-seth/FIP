@@ -33,6 +33,7 @@ class DatasetReadinessResponse(BaseModel):
     excluded_integrity_failures: int
     excluded_feature_contract_mismatches: int
     excluded_temporal_leakage: int
+    excluded_synthetic_sources: int
     feature_set_version: str
     label_contract_version: str
     readiness_status: DatasetReadinessStatus

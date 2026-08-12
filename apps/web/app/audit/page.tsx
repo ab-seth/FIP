@@ -21,6 +21,7 @@ const categories: AuditCategory[] = [
   "hybrid",
   "dataset",
   "training",
+  "benchmark",
   "evaluation",
 ];
 

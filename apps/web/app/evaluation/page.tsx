@@ -6,6 +6,7 @@ import type {
   SystemEvaluationRecord,
   VersionLineage,
 } from "@fip/contracts";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/lib/auth/server";
@@ -89,6 +90,23 @@ function EvaluationWorkspace({ record }: { record: SystemEvaluationRecord }) {
           label="Verified model reports"
           value={record.model_evidence.verified_shadow_evaluation_reports.toLocaleString("en-US")}
         />
+      </section>
+
+      <section className="evaluation-benchmark-callout">
+        <div>
+          <p className="eyebrow">Sealed workload evidence</p>
+          <h3>Synthetic system benchmarks</h3>
+          <p>
+            {record.benchmark_evidence.accepted_runs
+              ? `${record.benchmark_evidence.accepted_runs} accepted fixed-seed run(s) establish measured pipeline evidence.`
+              : "No 10,000-transaction acceptance run has been verified yet."}
+          </p>
+        </div>
+        <dl>
+          <div><dt>Verified runs</dt><dd>{record.benchmark_evidence.verified_runs}</dd></div>
+          <div><dt>Largest run</dt><dd>{record.benchmark_evidence.maximum_verified_transaction_count.toLocaleString("en-US")}</dd></div>
+        </dl>
+        <Link href="/evaluation/benchmarks">Open benchmark ledger →</Link>
       </section>
 
       <section className="evaluation-gates">
@@ -329,6 +347,7 @@ function IntegrityLedger({ integrity }: { integrity: IntegritySummary }) {
       integrity.scoring_observation_records,
       integrity.scoring_observation_integrity_failures,
     ],
+    ["Benchmark runs", integrity.benchmark_records, integrity.benchmark_integrity_failures],
   ] as const;
   const totalFailures = rows.reduce((total, row) => total + row[2], 0);
 

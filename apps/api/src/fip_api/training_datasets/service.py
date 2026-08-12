@@ -18,6 +18,8 @@ from fip_api.models import (
     CaseOutcomeReview,
     DatasetReadinessStatus,
     DatasetSplit,
+    IngestionBatch,
+    IngestionSourceType,
     OperationalDatasetRow,
     OperationalDatasetSnapshot,
     OutcomeReviewStatus,
@@ -99,6 +101,7 @@ class ReadinessEvidence:
     integrity_failures: int
     feature_contract_mismatches: int
     temporal_leakage: int
+    synthetic_exclusions: int
     gates: list[ReadinessGate]
 
     @property
@@ -122,8 +125,10 @@ def build_dataset_readiness(
             TransactionFeatureSnapshot,
             CaseOutcome,
             CaseOutcomeReview,
+            IngestionBatch,
         )
         .join(Transaction, Transaction.id == AnalystCase.transaction_id)
+        .join(IngestionBatch, IngestionBatch.id == Transaction.ingestion_batch_id)
         .join(
             TransactionFeatureSnapshot,
             TransactionFeatureSnapshot.id == AnalystCase.feature_snapshot_id,
@@ -147,7 +152,11 @@ def build_dataset_readiness(
     integrity_failures = 0
     feature_contract_mismatches = 0
     temporal_leakage = 0
-    for case, transaction, snapshot, outcome, review in candidates:
+    synthetic_exclusions = 0
+    for case, transaction, snapshot, outcome, review, batch in candidates:
+        if batch.source_type == IngestionSourceType.SYNTHETIC.value:
+            synthetic_exclusions += 1
+            continue
         if snapshot.feature_set_version != FEATURE_SET_VERSION or not all(
             name in snapshot.feature_values for name in TRAINING_FEATURE_NAMES
         ):
@@ -179,6 +188,7 @@ def build_dataset_readiness(
         integrity_failures=integrity_failures,
         feature_contract_mismatches=feature_contract_mismatches,
         temporal_leakage=temporal_leakage,
+        synthetic_exclusions=synthetic_exclusions,
     )
     return ReadinessEvidence(
         cutoff_at=cutoff,
@@ -186,6 +196,7 @@ def build_dataset_readiness(
         integrity_failures=integrity_failures,
         feature_contract_mismatches=feature_contract_mismatches,
         temporal_leakage=temporal_leakage,
+        synthetic_exclusions=synthetic_exclusions,
         gates=gates,
     )
 
@@ -318,6 +329,7 @@ def verify_dataset_integrity(db: Session, dataset: OperationalDatasetSnapshot) -
         outcome = db.get(CaseOutcome, row.outcome_id)
         review = db.get(CaseOutcomeReview, row.review_id)
         transaction = db.get(Transaction, case.transaction_id) if case is not None else None
+        batch = db.get(IngestionBatch, transaction.ingestion_batch_id) if transaction else None
         expected_label = (
             1
             if outcome is not None
@@ -330,6 +342,8 @@ def verify_dataset_integrity(db: Session, dataset: OperationalDatasetSnapshot) -
             or outcome is None
             or review is None
             or transaction is None
+            or batch is None
+            or batch.source_type == IngestionSourceType.SYNTHETIC.value
             or case.feature_snapshot_id != snapshot.id
             or outcome.case_id != case.id
             or review.outcome_id != outcome.id
@@ -418,6 +432,7 @@ def build_dataset_readiness_response(
         excluded_integrity_failures=evidence.integrity_failures,
         excluded_feature_contract_mismatches=evidence.feature_contract_mismatches,
         excluded_temporal_leakage=evidence.temporal_leakage,
+        excluded_synthetic_sources=evidence.synthetic_exclusions,
         feature_set_version=FEATURE_SET_VERSION,
         label_contract_version=LABEL_CONTRACT_VERSION,
         readiness_status=evidence.status,
@@ -493,6 +508,7 @@ def _readiness_gates(
     integrity_failures: int,
     feature_contract_mismatches: int,
     temporal_leakage: int,
+    synthetic_exclusions: int,
 ) -> list[ReadinessGate]:
     row_count = len(sources)
     positives = sum(source.label for source in sources)
@@ -512,6 +528,13 @@ def _readiness_gates(
         split_labels[split][source.label] += 1
     holdout_passed = all(counts[0] > 0 and counts[1] > 0 for counts in split_labels.values())
     return [
+        _gate(
+            "operational_sources_only",
+            True,
+            synthetic_exclusions,
+            "0 synthetic sources included",
+            "Synthetic benchmark outcomes are counted as exclusions and never enter training.",
+        ),
         _gate(
             "verified_source_integrity",
             integrity_failures == 0,

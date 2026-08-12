@@ -91,8 +91,32 @@ def validation_response(
 
 
 def create_csv_ingestion(db: Session, upload: ParsedUpload, user: User) -> IngestionBatch:
-    batch = _new_batch(
+    return _create_batch_ingestion(
+        db,
+        upload,
+        user,
         source_type=IngestionSourceType.CSV,
+    )
+
+
+def create_synthetic_ingestion(db: Session, upload: ParsedUpload, user: User) -> IngestionBatch:
+    return _create_batch_ingestion(
+        db,
+        upload,
+        user,
+        source_type=IngestionSourceType.SYNTHETIC,
+    )
+
+
+def _create_batch_ingestion(
+    db: Session,
+    upload: ParsedUpload,
+    user: User,
+    *,
+    source_type: IngestionSourceType,
+) -> IngestionBatch:
+    batch = _new_batch(
+        source_type=source_type,
         source_filename=upload.filename,
         source_checksum=upload.checksum,
         byte_count=upload.byte_count,

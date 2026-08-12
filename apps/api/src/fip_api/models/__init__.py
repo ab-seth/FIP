@@ -1,3 +1,8 @@
+from fip_api.models.benchmark import (
+    BenchmarkRunStatus,
+    SyntheticBenchmarkRun,
+    SyntheticBenchmarkRunEvent,
+)
 from fip_api.models.case import (
     AnalystCase,
     CaseClassification,
@@ -48,6 +53,7 @@ from fip_api.models.user import User, UserRole
 
 __all__ = [
     "AnalystCase",
+    "BenchmarkRunStatus",
     "CaseClassification",
     "CaseBrief",
     "CaseEvent",
@@ -76,6 +82,8 @@ __all__ = [
     "ScoringRuntimeObservation",
     "ShadowModelEvaluationReport",
     "ShadowModelPrediction",
+    "SyntheticBenchmarkRun",
+    "SyntheticBenchmarkRunEvent",
     "Transaction",
     "TransactionChannel",
     "TransactionFeatureSnapshot",

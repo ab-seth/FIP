@@ -13,6 +13,7 @@ AuditCategory = Literal[
     "hybrid",
     "dataset",
     "training",
+    "benchmark",
     "evaluation",
 ]
 AuditIntegrityFilter = Literal["all", "verified", "failed"]

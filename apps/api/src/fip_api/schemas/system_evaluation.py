@@ -70,6 +70,20 @@ class ModelEvidenceResponse(BaseModel):
     verified_shadow_evaluation_reports: int
 
 
+class BenchmarkEvidenceResponse(BaseModel):
+    runs: int
+    verified_runs: int
+    active_runs: int
+    failed_runs: int
+    accepted_runs: int
+    maximum_verified_transaction_count: int
+    latest_accepted_display_id: str | None
+    latest_accepted_report_checksum: str | None
+    synthetic_only: bool = True
+    eligible_for_operational_training: bool = False
+    model_efficacy_claim: bool = False
+
+
 class IntegritySummaryResponse(BaseModel):
     case_events: int
     case_records: int
@@ -88,6 +102,8 @@ class IntegritySummaryResponse(BaseModel):
     evaluation_report_integrity_failures: int
     scoring_observation_records: int
     scoring_observation_integrity_failures: int
+    benchmark_records: int
+    benchmark_integrity_failures: int
 
 
 class VersionLineageResponse(BaseModel):
@@ -103,6 +119,8 @@ class VersionLineageResponse(BaseModel):
     label_contract: str
     split_contract: str
     operational_training_pipeline: str
+    synthetic_benchmark_generator: str
+    synthetic_benchmark_report: str
 
 
 class SystemEvaluationRecordResponse(BaseModel):
@@ -113,6 +131,7 @@ class SystemEvaluationRecordResponse(BaseModel):
     scoring_latency: LatencySummaryResponse
     explanations: ExplanationEvaluationResponse
     model_evidence: ModelEvidenceResponse
+    benchmark_evidence: BenchmarkEvidenceResponse
     integrity: IntegritySummaryResponse
     versions: VersionLineageResponse
     gates: list[EvaluationGateResponse]

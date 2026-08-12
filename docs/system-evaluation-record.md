@@ -41,7 +41,7 @@ The initial gates are:
 
 | Gate | Target | Important interpretation |
 | --- | --- | --- |
-| Transaction benchmark volume | At least 10,000 scored transactions in this environment | Current row count is not a load-test result. Below-target volume is `not_demonstrated`, not failed. |
+| Transaction benchmark volume | One verified sealed 10,000-transaction benchmark run | Raw row count cannot pass. The fixed-seed run must complete validation, scoring, runtime verification, and case routing under the latency target. |
 | Deterministic scoring latency | Maximum verified runtime below 2,000 ms | Includes semantic feature/history construction and deterministic rule evaluation inside `assess_transaction`; excludes request parsing, network time, transaction commit, and UI rendering. |
 | LLM explanation latency | Maximum validated LLM generation below 10,000 ms | Deterministic fallbacks are excluded. Historical briefs without valid LLM observations are `not_observed`. |
 | Displayed explanation grounding | Zero displayed grounding or brief-integrity failures | Rejected provider candidates may safely fall back and remain recorded as rejection evidence. |
