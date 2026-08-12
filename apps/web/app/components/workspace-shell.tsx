@@ -10,6 +10,7 @@ type NavigationKey =
   | "case_dossiers"
   | "audit_ledger"
   | "ml_datasets"
+  | "ml_training"
   | "ml_models"
   | "evaluation_record";
 
@@ -28,8 +29,9 @@ const navigation: Array<{
     href: "/audit",
   },
   { key: "ml_datasets", label: "ML datasets", marker: "04", href: "/ml/datasets" },
-  { key: "ml_models", label: "Model operations", marker: "05", href: "/ml/models" },
-  { key: "evaluation_record", label: "Evaluation record", marker: "06", href: "/evaluation" },
+  { key: "ml_training", label: "Training operations", marker: "05", href: "/ml/training" },
+  { key: "ml_models", label: "Model operations", marker: "06", href: "/ml/models" },
+  { key: "evaluation_record", label: "Evaluation record", marker: "07", href: "/evaluation" },
 ];
 
 export function WorkspaceShell({

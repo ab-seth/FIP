@@ -9,6 +9,7 @@ from fip_api.api.routes import (
     health,
     models,
     training_datasets,
+    training_runs,
     transactions,
 )
 
@@ -21,4 +22,5 @@ api_router.include_router(models.router)
 api_router.include_router(transactions.router)
 api_router.include_router(cases.router)
 api_router.include_router(training_datasets.router)
+api_router.include_router(training_runs.router)
 api_router.include_router(evaluation.router)

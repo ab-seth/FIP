@@ -12,6 +12,7 @@ import type {
   ShadowRunResponse,
   UserRole,
 } from "@fip/contracts";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useMemo, useState } from "react";
 
@@ -86,9 +87,12 @@ export function ModelOperations({
           <p className="eyebrow">Administrative handoff</p>
           <h3>Register a candidate bundle.</h3>
           <p>
-            The offline trainer produces immutable metadata and executable bytes. Registration
+            Training Operations produces immutable metadata and executable bytes. Registration
             records the metadata only; it does not load or run the artifact.
           </p>
+          <Link className="model-training-link" href="/ml/training">
+            Open sealed training handoffs →
+          </Link>
           <ol className="model-intake-steps">
             <li><span>1</span> Select `registration-payload.json`.</li>
             <li><span>2</span> Install the checksum-matching `.joblib`.</li>

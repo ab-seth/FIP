@@ -78,7 +78,7 @@ def test_evaluation_record_is_authenticated_deterministic_and_read_only(
     assert unauthenticated.status_code == 401
     record = record_response.json()
     assert record == metrics_response.json()
-    assert record["schema_version"] == "system-evaluation-record-v1.0.0"
+    assert record["schema_version"] == "system-evaluation-record-v1.1.0"
     assert record["evidence_as_of"] is None
     assert record["overall_status"] == "evidence_pending"
     assert record["read_only"] is True
@@ -86,6 +86,7 @@ def test_evaluation_record_is_authenticated_deterministic_and_read_only(
     assert record["volume"]["transactions"] == 0
     assert record["scoring_latency"]["status"] == "not_observed"
     assert _gate(record, "transaction_benchmark_volume")["status"] == "not_demonstrated"
+    assert _gate(record, "reproducible_candidate_training")["status"] == "not_demonstrated"
     assert _gate(record, "reproducible_model_evaluation")["status"] == "not_demonstrated"
     assert before_transactions == after_transactions == 0
 

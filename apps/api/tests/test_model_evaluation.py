@@ -263,6 +263,9 @@ def test_shadow_evaluation_is_replay_safe_and_detects_drift_and_tampering(
     system_record = client.get("/api/v1/evaluation/record", headers=evaluator_headers)
     assert system_record.status_code == 200
     assert system_record.json()["model_evidence"] == {
+        "training_runs": 0,
+        "sealed_candidate_runs": 0,
+        "verified_sealed_candidate_runs": 0,
         "registered_models": 1,
         "verified_model_lineages": 1,
         "shadow_predictions": 40,

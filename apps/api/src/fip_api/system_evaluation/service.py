@@ -32,6 +32,8 @@ from fip_api.models import (
     HybridRiskAssessment,
     ModelLifecycleEvent,
     OperationalDatasetSnapshot,
+    OperationalTrainingRun,
+    OperationalTrainingRunEvent,
     RegisteredModel,
     ScoringRuntimeObservation,
     ShadowModelEvaluationReport,
@@ -39,6 +41,7 @@ from fip_api.models import (
     Transaction,
     TransactionRuleAssessment,
 )
+from fip_api.operational_ml import PIPELINE_VERSION
 from fip_api.rules import RISK_BAND_VERSION, RULESET_VERSION
 from fip_api.schemas.explanation import CaseBriefValidationResponse
 from fip_api.schemas.system_evaluation import (
@@ -60,8 +63,12 @@ from fip_api.training_datasets.service import (
     LABEL_CONTRACT_VERSION,
     SPLIT_CONTRACT_VERSION,
 )
+from fip_api.training_operations import (
+    get_training_artifact_store,
+    verify_training_run_integrity,
+)
 
-SYSTEM_EVALUATION_SCHEMA_VERSION = "system-evaluation-record-v1.0.0"
+SYSTEM_EVALUATION_SCHEMA_VERSION = "system-evaluation-record-v1.1.0"
 SCORING_LATENCY_TARGET_MILLISECONDS = 2_000
 LLM_LATENCY_TARGET_MILLISECONDS = 10_000
 BENCHMARK_VOLUME_TARGET = 10_000
@@ -95,6 +102,14 @@ def build_system_evaluation_record(db: Session) -> SystemEvaluationRecordRespons
             )
         ).all()
     )
+    training_runs = list(
+        db.scalars(
+            select(OperationalTrainingRun).order_by(
+                OperationalTrainingRun.created_at,
+                OperationalTrainingRun.id,
+            )
+        ).all()
+    )
     reports = list_all_shadow_evaluations(db)
     scoring_observations = list(
         db.scalars(
@@ -110,6 +125,10 @@ def build_system_evaluation_record(db: Session) -> SystemEvaluationRecordRespons
     brief_integrity = [verify_case_brief_integrity(db, brief) for brief in briefs]
     hybrid_integrity = [verify_hybrid_assessment_integrity(db, hybrid) for hybrid in hybrids]
     dataset_integrity = [verify_dataset_integrity(db, dataset) for dataset in datasets]
+    training_store = get_training_artifact_store()
+    training_run_integrity = [
+        verify_training_run_integrity(db, run, store=training_store) for run in training_runs
+    ]
     report_integrity = [verify_evaluation_report_integrity(db, report) for report in reports]
     scoring_integrity = [
         verify_scoring_runtime_observation(db, observation) for observation in scoring_observations
@@ -155,12 +174,20 @@ def build_system_evaluation_record(db: Session) -> SystemEvaluationRecordRespons
         hybrid_integrity_failures=hybrid_integrity.count(False),
         dataset_records=len(datasets),
         dataset_integrity_failures=dataset_integrity.count(False),
+        training_run_records=len(training_runs),
+        training_run_integrity_failures=training_run_integrity.count(False),
         evaluation_report_records=len(reports),
         evaluation_report_integrity_failures=report_integrity.count(False),
         scoring_observation_records=len(scoring_observations),
         scoring_observation_integrity_failures=scoring_integrity.count(False),
     )
     model_evidence = ModelEvidenceResponse(
+        training_runs=len(training_runs),
+        sealed_candidate_runs=sum(run.status == "succeeded" for run in training_runs),
+        verified_sealed_candidate_runs=sum(
+            run.status == "succeeded" and verified
+            for run, verified in zip(training_runs, training_run_integrity, strict=True)
+        ),
         registered_models=len(models),
         verified_model_lineages=model_integrity.count(True),
         shadow_predictions=_count(db, ShadowModelPrediction),
@@ -180,6 +207,7 @@ def build_system_evaluation_record(db: Session) -> SystemEvaluationRecordRespons
         model_evaluation_report=SHADOW_EVALUATION_SCHEMA_VERSION,
         label_contract=LABEL_CONTRACT_VERSION,
         split_contract=SPLIT_CONTRACT_VERSION,
+        operational_training_pipeline=PIPELINE_VERSION,
     )
     gates = _evaluation_gates(
         volume=volume,
@@ -283,6 +311,7 @@ def _evaluation_gates(
             integrity.case_brief_integrity_failures,
             integrity.hybrid_integrity_failures,
             integrity.dataset_integrity_failures,
+            integrity.training_run_integrity_failures,
             integrity.evaluation_report_integrity_failures,
             integrity.scoring_observation_integrity_failures,
         )
@@ -294,6 +323,7 @@ def _evaluation_gates(
             integrity.case_brief_records,
             integrity.hybrid_records,
             integrity.dataset_records,
+            integrity.training_run_records,
             integrity.evaluation_report_records,
             integrity.scoring_observation_records,
         )
@@ -347,6 +377,22 @@ def _evaluation_gates(
             observed=integrity_failures,
             target="0 integrity failures across material record types",
             detail="Every supported record type is independently re-verified on this read.",
+        ),
+        EvaluationGateResponse(
+            gate="reproducible_candidate_training",
+            status=(
+                "not_demonstrated"
+                if model_evidence.sealed_candidate_runs == 0
+                else "passed"
+                if model_evidence.sealed_candidate_runs
+                == model_evidence.verified_sealed_candidate_runs
+                else "failed"
+            ),
+            observed=model_evidence.verified_sealed_candidate_runs,
+            target=">= 1 verified candidate-only training bundle",
+            detail=(
+                "Training runs pin one dataset, configuration, worker chain, and candidate bundle."
+            ),
         ),
         EvaluationGateResponse(
             gate="reproducible_model_evaluation",
@@ -414,6 +460,7 @@ def _evidence_as_of(
             db.scalar(select(func.max(ShadowModelPrediction.created_at))),
             db.scalar(select(func.max(HybridRiskAssessment.created_at))),
             db.scalar(select(func.max(OperationalDatasetSnapshot.created_at))),
+            db.scalar(select(func.max(OperationalTrainingRunEvent.created_at))),
             db.scalar(select(func.max(ShadowModelEvaluationReport.created_at))),
             db.scalar(select(func.max(ScoringRuntimeObservation.created_at))),
         )

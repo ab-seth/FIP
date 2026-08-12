@@ -271,6 +271,10 @@ function ModelEvidence({ record }: { record: SystemEvaluationRecord }) {
       </header>
       <dl className="evaluation-statements">
         <EvidenceStatement
+          label="Verified candidate runs"
+          value={`${evidence.verified_sealed_candidate_runs}/${evidence.sealed_candidate_runs}`}
+        />
+        <EvidenceStatement
           label="Registered lineages"
           value={`${evidence.verified_model_lineages}/${evidence.registered_models}`}
         />
@@ -314,6 +318,7 @@ function IntegrityLedger({ integrity }: { integrity: IntegritySummary }) {
     ["Case briefs", integrity.case_brief_records, integrity.case_brief_integrity_failures],
     ["Hybrid assessments", integrity.hybrid_records, integrity.hybrid_integrity_failures],
     ["Dataset snapshots", integrity.dataset_records, integrity.dataset_integrity_failures],
+    ["Training runs", integrity.training_run_records, integrity.training_run_integrity_failures],
     [
       "Evaluation reports",
       integrity.evaluation_report_records,

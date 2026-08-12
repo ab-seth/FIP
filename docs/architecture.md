@@ -2,11 +2,12 @@
 
 ## Deployment boundaries
 
-FIP has three runtime services:
+FIP has four runtime services:
 
 1. A Next.js web application for analysts, managers, evaluators, and administrators.
 2. A FastAPI backend implementing the business workflow and security boundaries.
 3. PostgreSQL as the durable system of record.
+4. An isolated offline candidate-training worker.
 
 The frontend and backend are independently built and deployed. The backend is a modular monolith for the MVP, not a combined frontend/backend application.
 
@@ -25,6 +26,7 @@ The API will evolve around these modules:
 - `cases`: alert queues, analyst notes, and human determinations.
 - `audit`: append-only hash-chained material events.
 - `evaluation`: reproducible model, grounding, and latency evidence.
+- `training_operations`: durable candidate-run orchestration and artifact verification.
 
 Modules may share a process and database while preserving explicit service, schema, and dependency boundaries. Splitting a module into a separate service requires measured scaling or isolation evidence and is not part of the MVP.
 
@@ -126,7 +128,8 @@ measure. Metric definitions and initial drift heuristics are documented in
 
 The `system_evaluation` module is a read-only projection over existing domain evidence. It reads
 transaction and case counts, checksum-protected scoring-runtime observations, case-brief validation,
-model and hybrid lineages, dataset manifests, and immutable shadow-evaluation reports. It has no
+model and hybrid lineages, dataset manifests, training runs, and immutable shadow-evaluation reports.
+It has no
 write service and no dependency edge into ingestion, scoring execution, case mutation, model
 lifecycle, training, or financial actions.
 
@@ -139,8 +142,9 @@ records, excludes damaged timing observations from latency statistics, assigns e
 ## Unified audit projection boundary
 
 The `audit` module is a read-only cross-domain index. It reads material records from cases, model
-governance, scoring observations, grounded explanations, hybrid evidence, operational datasets, and
-model evaluation, then delegates verification back to each owning module. It does not persist a
+governance, scoring observations, grounded explanations, hybrid evidence, operational datasets,
+training runs, and model evaluation, then delegates verification back to each owning module. It does
+not persist a
 second ledger, rechecksum damaged evidence, or expose a mutation endpoint.
 
 Case and model events remain hash-chained inside their domain boundaries. Other records retain
@@ -184,11 +188,17 @@ for supervised calibration, validation controls candidate selection and threshol
 evaluated once after selection.
 
 The package creates independently checksummed supervised and anomaly artifacts, model cards,
-aggregate evidence, and schema-valid registry payloads. Dependency direction remains one way: it may
-read `training_datasets` and registry input schemas, while API routing, ingestion, cases, rules,
-scoring, registry services, and shadow recording never invoke training. The trainer has no registry
-client and no lifecycle or prediction write path. See
+aggregate evidence, and schema-valid registry payloads. `training_operations` is the control-plane
+adapter: API routing may authorize and queue immutable runs, while only the separately deployed
+worker invokes `operational_ml`. The API process, ingestion, cases, rules, scoring, registry services,
+and shadow recording never execute training. The worker has no registry client and no lifecycle or
+prediction write path. See
 [`operational-candidate-training.md`](operational-candidate-training.md).
+
+PostgreSQL stores the durable queue and checksum-linked attempt chain. The worker alone has
+read/write access to candidate storage; the API has read-only access for fresh integrity checks and
+authorized streaming. Completing a run cannot register or install a model. See
+[`training-operations-workspace.md`](training-operations-workspace.md).
 
 ## Design system
 

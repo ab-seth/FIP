@@ -4,7 +4,7 @@
 
 FIP exposes a single read-only register of the material, checksum-protected records already owned
 by its domain modules. The register helps analysts and evaluators trace human decisions, rules
-scoring, model evidence, grounded explanations, governed datasets, and evaluation reports without
+scoring, model evidence, grounded explanations, governed datasets, training runs, and evaluation reports without
 moving or copying the source records into a second audit database.
 
 The ledger is a projection, not a new source of truth. Case and model lifecycle events retain their
@@ -23,7 +23,7 @@ Supported query parameters are:
 
 | Parameter | Values | Default |
 | --- | --- | --- |
-| `category` | `case`, `model`, `scoring`, `explanation`, `hybrid`, `dataset`, `evaluation` | all categories |
+| `category` | `case`, `model`, `scoring`, `explanation`, `hybrid`, `dataset`, `training`, `evaluation` | all categories |
 | `integrity` | `all`, `verified`, `failed` | `all` |
 | `q` | Case/model/transaction reference, actor, action, detail, or checksum text | none |
 | `page` | Integer at least 1 | 1 |
@@ -39,7 +39,8 @@ read-only and changes no operational state.
 - deterministic scoring runtime observations;
 - grounded case briefs;
 - governed hybrid evidence assessments;
-- operational dataset snapshots; and
+- operational dataset snapshots;
+- candidate training-run lifecycle events; and
 - immutable shadow-model evaluation reports.
 
 Rows link back to the owning case dossier, dataset archive, model evidence, or evaluation archive.

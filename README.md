@@ -8,10 +8,13 @@ FIP is a modular monorepo with independently runnable and deployable services:
 
 - `apps/web`: Next.js analyst interface.
 - `apps/api`: FastAPI application with modular domain boundaries.
+- `trainer`: separately deployed offline worker built from `apps/api`.
 - `packages/contracts`: shared API contracts for the web application.
 - `infrastructure`: deployment and environment documentation.
 
-The frontend and backend are separate applications. The backend is a modular monolith for the MVP: ingestion, scoring, explainability, cases, audit, and evaluation remain isolated modules inside one API deployment.
+The frontend and backend are separate applications. The transactional backend is a modular monolith
+for the MVP: ingestion, scoring, explainability, cases, audit, and evaluation remain isolated modules
+inside one API deployment. CPU-heavy model training runs in a separate worker service.
 
 Browser authentication crosses a small server-side boundary in the Next.js application. The web server exchanges credentials with the API and keeps the short-lived API token in an `HttpOnly`, `SameSite=Lax` cookie; the token is never exposed to browser JavaScript or local storage. The API enforces temporary account lockout after repeated failed sign-in attempts.
 
@@ -79,8 +82,14 @@ model cards, checksummed artifacts, and schema-valid registration payloads. It n
 promotes a model. See
 [`docs/operational-candidate-training.md`](docs/operational-candidate-training.md).
 
+The `/ml/training` workspace provides a durable control plane for that trainer. Administrators queue
+immutable configurations; a separate worker seals checksum-verified candidate bundles; and all roles
+can inspect the run chain. Registration, artifact installation, and shadow admission remain explicit
+later actions. See [`docs/training-operations-workspace.md`](docs/training-operations-workspace.md).
+
 An authenticated, read-only audit workspace unifies the material records already owned by cases,
-scoring, model governance, explanations, hybrid evidence, datasets, and evaluation. It reuses each
+scoring, model governance, explanations, hybrid evidence, datasets, training, and evaluation. It
+reuses each
 domain's integrity verifier, keeps damaged evidence visible, and never creates a second source of
 truth. See [`docs/audit-ledger.md`](docs/audit-ledger.md).
 

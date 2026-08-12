@@ -81,6 +81,11 @@ anomaly/registration-payload.json
 contract versions, aggregate partition counts, configuration, metrics, and global importance—never
 source foreign keys, account or transaction identifiers, reviewer identities, notes, or rationales.
 
+For the application-managed workflow, `/ml/training` records the immutable request and a separate
+`trainer` service executes this same pipeline. See
+[`training-operations-workspace.md`](training-operations-workspace.md). The CLI remains available for
+offline administration and reproducibility checks.
+
 ## Registration handoff
 
 Each registration payload is validated against `ModelRegistrationCreate` during bundle creation.

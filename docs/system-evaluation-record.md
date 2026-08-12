@@ -46,6 +46,7 @@ The initial gates are:
 | LLM explanation latency | Maximum validated LLM generation below 10,000 ms | Deterministic fallbacks are excluded. Historical briefs without valid LLM observations are `not_observed`. |
 | Displayed explanation grounding | Zero displayed grounding or brief-integrity failures | Rejected provider candidates may safely fall back and remain recorded as rejection evidence. |
 | Append-only integrity | Zero verification failures across supported material records | Empty record families are reported honestly; supported records are independently re-verified on read. |
+| Reproducible candidate training | At least one verified candidate-only training bundle | Runs pin dataset, configuration, worker event chain, registration handoffs, and bundle checksums. |
 | Reproducible model evaluation | At least one verified immutable shadow-evaluation report | Reports pin model, feature, rules, prediction, window, requester, and checksum lineage. |
 
 The overall status is `attention` if any gate fails, `passed` only if every gate passes, and
@@ -75,10 +76,10 @@ The response contains:
 - transaction, risk-band, case-status, and human-outcome counts;
 - count, mean, interpolated p95, maximum, target, and state for observed latencies;
 - validated LLM brief, fallback, rejection, and grounding counts;
-- registered-model, verified-lineage, shadow-prediction, hybrid-assessment, and evaluation-report
-  counts;
+- training-run, sealed-candidate, registered-model, verified-lineage, shadow-prediction,
+  hybrid-assessment, and evaluation-report counts;
 - integrity results for case chains, model lineages, briefs, hybrid assessments, dataset snapshots,
-  model evaluation reports, and scoring observations;
+  training runs, model evaluation reports, and scoring observations;
 - current feature, rules, risk-band, hybrid, explanation, dataset, shadow, and evaluation contract
   versions; and
 - up to 20 latest immutable shadow-model evaluation reports.

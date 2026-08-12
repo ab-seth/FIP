@@ -360,6 +360,72 @@ export interface DatasetSnapshotCreateResponse {
   dataset: OperationalDatasetDetail;
 }
 
+export type TrainingRunStatus = "queued" | "running" | "succeeded" | "failed";
+
+export interface TrainingRunEvent {
+  sequence_number: number;
+  from_status: TrainingRunStatus | null;
+  to_status: TrainingRunStatus;
+  detail: string;
+  actor_username: string;
+  previous_event_checksum: string | null;
+  event_checksum: string;
+  created_at: string;
+}
+
+export interface TrainingCandidate {
+  model_key: string;
+  version: string;
+  kind: ModelKind;
+  runtime_contract: ModelRuntimeContract;
+  artifact_sha256: string;
+  model_card_checksum: string;
+  registration_payload_checksum: string;
+  decision_threshold: string | null;
+  evaluation_metrics: Record<string, unknown>;
+  selected_model: string;
+  registration_download: string;
+  model_card_download: string;
+  artifact_download: string;
+}
+
+export interface OperationalTrainingRun {
+  id: string;
+  display_id: string;
+  dataset_id: string;
+  dataset_display_id: string;
+  dataset_checksum: string;
+  requested_by: string;
+  candidate_version: string;
+  seed: number;
+  maximum_false_positive_rate: string;
+  reason: string;
+  pipeline_version: string;
+  configuration_checksum: string;
+  status: TrainingRunStatus;
+  attempt_count: number;
+  candidates: Record<ModelKind, TrainingCandidate> | null;
+  evidence_checksum: string | null;
+  manifest_checksum: string | null;
+  bundle_checksum: string | null;
+  error_code: string | null;
+  error_message: string | null;
+  integrity_verified: boolean;
+  events: TrainingRunEvent[];
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  candidate_only: true;
+  automatic_registration: false;
+  automatic_shadow_promotion: false;
+  affects_operational_score: false;
+}
+
+export interface TrainingRunCreationResponse {
+  created: boolean;
+  run: OperationalTrainingRun;
+}
+
 export type ModelKind = "supervised" | "anomaly";
 export type ModelPurpose = "research" | "operational";
 export type ModelRuntimeContract = "binary-probability-v1" | "anomaly-score-v1";
@@ -540,6 +606,9 @@ export interface ExplanationEvaluation {
 }
 
 export interface ModelEvidence {
+  training_runs: number;
+  sealed_candidate_runs: number;
+  verified_sealed_candidate_runs: number;
   registered_models: number;
   verified_model_lineages: number;
   shadow_predictions: number;
@@ -560,6 +629,8 @@ export interface IntegritySummary {
   hybrid_integrity_failures: number;
   dataset_records: number;
   dataset_integrity_failures: number;
+  training_run_records: number;
+  training_run_integrity_failures: number;
   evaluation_report_records: number;
   evaluation_report_integrity_failures: number;
   scoring_observation_records: number;
@@ -578,6 +649,7 @@ export interface VersionLineage {
   model_evaluation_report: string;
   label_contract: string;
   split_contract: string;
+  operational_training_pipeline: string;
 }
 
 export interface ShadowEvaluationReport {
@@ -627,6 +699,7 @@ export type AuditCategory =
   | "explanation"
   | "hybrid"
   | "dataset"
+  | "training"
   | "evaluation";
 
 export type AuditIntegrityFilter = "all" | "verified" | "failed";

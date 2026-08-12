@@ -178,6 +178,8 @@ def _write_candidate_bundle(
                 "pipeline_version": PIPELINE_VERSION,
                 "candidate_only": True,
                 "automatic_registration": False,
+                "automatic_shadow_promotion": False,
+                "live_scoring": False,
                 "files": files,
             },
         )

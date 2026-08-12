@@ -79,6 +79,11 @@ snapshot. It writes reproducible supervised and anomaly candidate artifacts, evi
 and validated registration payloads without calling the registry or executing either model. See
 [`../../docs/operational-candidate-training.md`](../../docs/operational-candidate-training.md).
 
+`POST /api/v1/ml/training-runs` records an administrator-authorized immutable configuration. The
+separate `fip-training-worker` process consumes that durable queue, executes the same offline
+pipeline, and seals downloadable candidate handoffs without calling the registry. See
+[`../../docs/training-operations-workspace.md`](../../docs/training-operations-workspace.md).
+
 The offline `fip-research-verify-candidate` command re-trains a completed public-dataset experiment,
 verifies its source evidence, and exports a fresh checksummed artifact bundle with a research-only
 registry payload. It does not call the API or promote a lifecycle. See
