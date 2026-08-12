@@ -10,6 +10,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from fip_api.core.checksums import canonical_json_checksum
+from fip_api.models import TransactionChannel
 from fip_api.schemas.transaction import TransactionCreate
 
 GENERATOR_VERSION = "synthetic-transaction-generator-v1.0.0"
@@ -131,19 +132,19 @@ def _account_transactions(
         occurred_at = BASE_TIMESTAMP + timedelta(days=row_index, seconds=account_index)
         merchant = f"SYN-MERCHANT-{account_index % 25:03d}"
         merchant_category_code = "5411"
-        channel = "card_present"
+        channel = TransactionChannel.CARD_PRESENT
         destination_country = "US"
 
         final_row = row_index == group_size - 1
         burst_row = group_size >= 5 and row_index >= group_size - 5
         if profile in {"rapid_cross_border", "combined"} and burst_row:
             occurred_at = burst_start + timedelta(minutes=(row_index - (group_size - 5)) * 10)
-            channel = "card_not_present"
+            channel = TransactionChannel.CARD_NOT_PRESENT
             destination_country = "KE"
             merchant = f"SYN-BURST-{account_index:05d}"
         if final_row and profile in {"cross_border", "combined"}:
             occurred_at = occurred_at.replace(hour=2)
-            channel = "card_not_present"
+            channel = TransactionChannel.CARD_NOT_PRESENT
             destination_country = "KE"
             merchant = f"SYN-NEW-{account_index:05d}"
         if final_row and profile in {"amount_spike", "combined"}:
