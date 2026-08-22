@@ -834,3 +834,114 @@ export interface AuditLedger {
   read_only: true;
   changes_operational_state: false;
 }
+
+export interface ResearchDatasetEvidence {
+  dataset_id: string;
+  display_name: string;
+  source_page: string;
+  provenance: string;
+  observation_period: string;
+  provider_license: string;
+  provider_md5: string;
+  source_file_sha256: string;
+  row_count: number;
+  positive_count: number;
+  negative_count: number;
+  prevalence: string;
+  feature_count: number;
+  operational_feature_compatible: boolean;
+  operational_block_reason: string;
+}
+
+export interface ResearchPartitionEvidence {
+  name: "train" | "calibration" | "validation" | "test";
+  purpose: string;
+  row_count: number;
+  positive_count: number;
+  minimum_event_time: number;
+  maximum_event_time: number;
+}
+
+export interface ResearchValidationMetrics {
+  average_precision: string;
+  roc_auc: string;
+  brier_score: string;
+  expected_calibration_error: string;
+  precision: string;
+  recall: string;
+  f1: string;
+  false_positive_rate: string;
+  alert_rate: string;
+  threshold: string;
+}
+
+export interface ResearchCandidateEvidence {
+  model_key: string;
+  display_name: string;
+  selected: boolean;
+  validation: ResearchValidationMetrics;
+}
+
+export interface ResearchTestEvidence extends ResearchValidationMetrics {
+  row_count: number;
+  positive_count: number;
+  true_positives: number;
+  false_positives: number;
+  true_negatives: number;
+  false_negatives: number;
+}
+
+export interface ResearchFeatureImportance {
+  feature: string;
+  mean_pr_auc_decrease: string;
+  standard_deviation: string;
+}
+
+export interface ResearchModelEvidence {
+  schema_version: string;
+  run_id: string;
+  created_at: string;
+  dataset: ResearchDatasetEvidence;
+  partitions: ResearchPartitionEvidence[];
+  candidates: ResearchCandidateEvidence[];
+  selected_model: string;
+  held_out_test: ResearchTestEvidence;
+  explainability: {
+    method: string;
+    repeats: number;
+    validation_sample_fraction: string;
+    semantic_limit: string;
+    features: ResearchFeatureImportance[];
+  };
+  reproducibility: {
+    pipeline_version: string;
+    random_seed: number;
+    maximum_validation_false_positive_rate: string;
+    split_contract: string;
+    runtime: {
+      python: string;
+      numpy: string;
+      scikit_learn: string;
+    };
+    artifacts: {
+      metrics_sha256: string;
+      model_card_sha256: string;
+      model_artifact_sha256: string;
+      run_manifest_sha256: string;
+    };
+  };
+  claims: {
+    evidence_scope: "research_methodology";
+    research_only: true;
+    real_public_transactions: true;
+    eligible_for_operational_promotion: false;
+    demonstrates_institution_specific_efficacy: false;
+    affects_operational_score: false;
+    triggers_automatic_action: false;
+    statement: string;
+  };
+  evidence_checksum: string;
+  integrity_verified: boolean;
+  read_only: true;
+  changes_operational_state: false;
+}

@@ -55,9 +55,10 @@ path. The contract and limitations are documented in
 ## Research ML boundary
 
 Research dataset loading, temporal splitting, model training, calibration, evaluation, artifact
-checksums, and model-card generation live under `fip_api.research_ml`. This package has no import or
-dependency edge from the API router, ingestion service, or operational scoring service. Its public
-datasets use source-specific features and cannot register an operational model.
+checksums, and model-card generation live under `fip_api.research_ml`. Its executable pipeline has
+no dependency edge from ingestion or operational scoring. The API imports only a sealed aggregate
+evidence projection; it cannot execute the research model. Public datasets use source-specific
+features and cannot register an operational model.
 
 The same package owns an offline candidate-dossier adapter. It re-trains from a raw file that matches
 the reviewed provider manifest, reproduces held-out evaluation without loading the supplied
@@ -69,6 +70,12 @@ The first executable benchmark uses real ULB/OpenML transactions to validate met
 not demonstrate production efficacy because most features are undisclosed PCA components. The
 dataset decision and promotion gate are documented in
 [`ml-research-evidence.md`](ml-research-evidence.md).
+
+The authenticated `GET /api/v1/ml/research-evidence` route exposes aggregate facts and checksums
+from the completed run—never raw rows or the serialized model. The `/ml/research` frontend renders
+this sealed projection and keeps the research-only, no-score, no-action, and no-promotion
+constraints visible. See
+[`research-ml-evidence-workspace.md`](research-ml-evidence-workspace.md).
 
 ## Governed shadow model boundary
 

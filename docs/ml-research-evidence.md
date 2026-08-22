@@ -59,6 +59,12 @@ The first verified full-data result is recorded in
 [`evidence/ulb-credit-card-v1-seed-42.md`](evidence/ulb-credit-card-v1-seed-42.md). The recorded report
 contains metrics and source checksums, but never the raw rows or serialized model.
 
+Authenticated users can inspect that result at `/ml/research`. The workspace reads one pinned,
+checksummed API projection and presents dataset provenance, temporal partitions, the validation
+decision, held-out test performance, permutation diagnostics, and the claims boundary. It remains
+read-only and has no route into operational registration. See
+[`research-ml-evidence-workspace.md`](research-ml-evidence-workspace.md).
+
 ## Leakage and evaluation controls
 
 The pipeline applies these controls:

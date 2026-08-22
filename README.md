@@ -95,6 +95,12 @@ entering operational model training. This is system-performance evidence, not mo
 evidence. See
 [`docs/reproducible-system-benchmarks.md`](docs/reproducible-system-benchmarks.md).
 
+The `/ml/research` workspace exposes the completed ULB/OpenML experiment as a sealed, read-only
+evidence dossier. It reports real-data provenance, temporal partitions, candidate selection,
+held-out performance, permutation diagnostics, and artifact checksums while preserving an explicit
+non-promotion boundary. It cannot register a model, change a score, or trigger an action. See
+[`docs/research-ml-evidence-workspace.md`](docs/research-ml-evidence-workspace.md).
+
 An authenticated, read-only audit workspace unifies the material records already owned by cases,
 scoring, model governance, explanations, hybrid evidence, datasets, training, and evaluation. It
 reuses each
