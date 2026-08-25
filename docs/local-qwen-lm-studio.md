@@ -39,9 +39,17 @@ LM Studio must accept the API container's connection. On macOS or Windows this g
 enabling **Serve on Local Network** in LM Studio; the Compose service resolves
 `host.docker.internal` to the host. Do not enable browser CORS for this server-to-server connection.
 Keep the service restricted to the local machine/network. If LM Studio authentication is enabled,
-set its token as `FIP_LLM_API_KEY` and do not commit `.env`.
+export it as `LM_API_TOKEN` before starting Compose; Compose maps that value into the API container
+without writing the token to `.env`. `FIP_LLM_API_KEY` remains the direct configuration alternative.
 
-Restart the API after changing configuration:
+```bash
+export LM_API_TOKEN="<local-token>"
+docker compose up --build
+```
+
+Do not add the token to a tracked file or paste it into logs.
+
+Restart the API after changing configuration. If the token is already exported, this is sufficient:
 
 ```bash
 docker compose up --build
