@@ -9,7 +9,9 @@ from fip_api.explainability.provider import (
     CaseBriefProviderResult,
     CaseBriefProviderUnavailable,
     JsonHttpCaseBriefProvider,
+    OpenAICompatibleCaseBriefProvider,
     UnavailableCaseBriefProvider,
+    build_case_brief_provider_status,
     get_case_brief_provider,
 )
 from fip_api.explainability.service import (
@@ -32,7 +34,9 @@ __all__ = [
     "CaseBriefProviderResult",
     "CaseBriefProviderUnavailable",
     "JsonHttpCaseBriefProvider",
+    "OpenAICompatibleCaseBriefProvider",
     "UnavailableCaseBriefProvider",
+    "build_case_brief_provider_status",
     "build_case_brief_response",
     "create_case_brief",
     "get_case_brief_provider",

@@ -33,17 +33,21 @@ services:
       FIP_MODEL_ARTIFACT_MAX_BYTES: ${FIP_MODEL_ARTIFACT_MAX_BYTES:-268435456}
       FIP_TRAINING_ARTIFACT_ROOT: ${FIP_TRAINING_ARTIFACT_ROOT:-/var/lib/fip/training-artifacts}
       FIP_TRAINING_ARTIFACT_MAX_BYTES: ${FIP_TRAINING_ARTIFACT_MAX_BYTES:-268435456}
+      FIP_LLM_ADAPTER: ${FIP_LLM_ADAPTER:-json-http}
       FIP_LLM_ENDPOINT: ${FIP_LLM_ENDPOINT:-}
       FIP_LLM_API_KEY: ${FIP_LLM_API_KEY:-}
       FIP_LLM_MODEL: ${FIP_LLM_MODEL:-}
       FIP_LLM_PROVIDER_NAME: ${FIP_LLM_PROVIDER_NAME:-json-http}
       FIP_LLM_TIMEOUT_SECONDS: ${FIP_LLM_TIMEOUT_SECONDS:-8}
       FIP_LLM_MAX_RESPONSE_BYTES: ${FIP_LLM_MAX_RESPONSE_BYTES:-262144}
+      FIP_LLM_MAX_COMPLETION_TOKENS: ${FIP_LLM_MAX_COMPLETION_TOKENS:-1800}
       FIP_BOOTSTRAP_ADMIN_USERNAME: ${FIP_BOOTSTRAP_ADMIN_USERNAME:-admin}
       FIP_BOOTSTRAP_ADMIN_PASSWORD: ${FIP_BOOTSTRAP_ADMIN_PASSWORD:-admin-change-me}
     command: ["sh", "-c", "alembic upgrade head && python -m fip_api.bootstrap && uvicorn fip_api.main:app --host 0.0.0.0 --port 8000"]
     ports:
       - "8000:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - fip_model_artifacts:/var/lib/fip/model-artifacts
       - fip_training_artifacts:/var/lib/fip/training-artifacts:ro

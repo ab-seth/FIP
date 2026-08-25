@@ -37,17 +37,19 @@ class Settings(BaseSettings):
     training_worker_lease_minutes: int = Field(default=360, ge=30, le=1440)
     benchmark_worker_poll_seconds: int = Field(default=2, ge=1, le=60)
     benchmark_worker_lease_minutes: int = Field(default=360, ge=30, le=1440)
+    llm_adapter: Literal["json-http", "openai-compatible"] = "json-http"
     llm_endpoint: str | None = None
     llm_api_key: SecretStr | None = None
     llm_model: str | None = None
     llm_provider_name: str = Field(default="json-http", min_length=2, max_length=64)
-    llm_timeout_seconds: int = Field(default=8, ge=1, le=10)
+    llm_timeout_seconds: int = Field(default=8, ge=1, le=120)
     llm_max_response_bytes: int = Field(default=256 * 1024, ge=1024, le=1024 * 1024)
+    llm_max_completion_tokens: int = Field(default=1800, ge=256, le=8192)
     bootstrap_admin_username: str | None = None
     bootstrap_admin_password: SecretStr | None = None
     cors_origins: list[str] = ["http://localhost:3000"]
 
-    @field_validator("llm_endpoint", "llm_model", mode="before")
+    @field_validator("llm_endpoint", "llm_model", "llm_api_key", mode="before")
     @classmethod
     def normalize_optional_llm_text(cls, value: object) -> object:
         if isinstance(value, str):

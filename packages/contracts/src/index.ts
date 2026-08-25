@@ -267,6 +267,23 @@ export interface CaseBriefCreationResponse {
   brief: CaseBrief;
 }
 
+export interface CaseBriefProviderStatus {
+  configured: boolean;
+  adapter: "disabled" | "json-http" | "openai-compatible";
+  provider_name: string;
+  model_name: string | null;
+  endpoint_scope: "disabled" | "local" | "remote";
+  api_key_configured: boolean;
+  timeout_seconds: number;
+  max_response_bytes: number;
+  max_completion_tokens: number;
+  structured_output_required: true;
+  connectivity_checked: false;
+  decision_support_only: true;
+  affects_operational_score: false;
+  triggers_automatic_action: false;
+}
+
 export interface CaseEvent {
   sequence_number: number;
   event_type: CaseEventType;

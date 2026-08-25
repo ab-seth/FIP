@@ -1,4 +1,9 @@
-import type { CaseDetail, CaseSummary, ShadowPrediction } from "@fip/contracts";
+import type {
+  CaseBriefProviderStatus,
+  CaseDetail,
+  CaseSummary,
+  ShadowPrediction,
+} from "@fip/contracts";
 import { cookies } from "next/headers";
 
 import { getApiUrl, SESSION_COOKIE } from "@/lib/auth/constants";
@@ -9,6 +14,10 @@ export async function getCases(): Promise<CaseSummary[]> {
 
 export async function getCase(caseId: string): Promise<CaseDetail | null> {
   return caseRequest(`/api/v1/cases/${encodeURIComponent(caseId)}`);
+}
+
+export async function getCaseBriefProviderStatus(): Promise<CaseBriefProviderStatus | null> {
+  return caseRequest("/api/v1/explanations/provider-status");
 }
 
 export async function getShadowPredictions(transactionId: string): Promise<ShadowPrediction[]> {

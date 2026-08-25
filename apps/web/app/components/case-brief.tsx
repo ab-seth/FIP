@@ -5,6 +5,7 @@ import type {
   CaseBrief,
   CaseBriefClaim,
   CaseBriefCreationResponse,
+  CaseBriefProviderStatus,
   HybridRiskAssessment,
   UserRole,
 } from "@fip/contracts";
@@ -15,11 +16,13 @@ export function GroundedCaseBrief({
   caseBriefs,
   caseId,
   hybridAssessments,
+  providerStatus,
   role,
 }: {
   caseBriefs: CaseBrief[];
   caseId: string;
   hybridAssessments: HybridRiskAssessment[];
+  providerStatus: CaseBriefProviderStatus | null;
   role: UserRole;
 }) {
   const router = useRouter();
@@ -66,6 +69,7 @@ export function GroundedCaseBrief({
           </div>
           <span>{hybrid ? "Hybrid evidence ready" : "Rules evidence ready"}</span>
         </div>
+        <ProviderStatus status={providerStatus} />
         <p>
           Generate a structured review brief from the verified evidence already in this dossier.
           It may explain and suggest review steps; it cannot change the score, classify the case,
@@ -73,7 +77,11 @@ export function GroundedCaseBrief({
         </p>
         {canGenerate ? (
           <button className="dossier-button case-brief-generate" disabled={busy} onClick={generateBrief} type="button">
-            {busy ? "Validating brief…" : hybrid ? "Generate cited AI brief" : "Generate rules-grounded brief"}
+            {busy
+              ? "Validating brief…"
+              : providerStatus?.configured
+                ? "Generate cited AI brief"
+                : "Generate deterministic brief"}
           </button>
         ) : (
           <p className="case-brief-readonly">An administrator or analyst may generate this record.</p>
@@ -119,6 +127,7 @@ export function GroundedCaseBrief({
           {brief.generation_mode === "llm" ? "Validated AI" : "Deterministic fallback"}
         </span>
       </div>
+      <ProviderStatus status={providerStatus} />
 
       {!brief.integrity_verified || !brief.validation.display_output.grounding_passed ? (
         <div className="case-brief-warning" role="alert">
@@ -151,6 +160,10 @@ export function GroundedCaseBrief({
           <span>Generated</span>
           <strong>{brief.requested_by} · {formatTimestamp(brief.created_at)}</strong>
         </div>
+        <div>
+          <span>Provider</span>
+          <strong>{brief.provider_name} · {brief.provider_model}</strong>
+        </div>
       </footer>
 
       <div className="case-brief-controls">
@@ -166,6 +179,45 @@ export function GroundedCaseBrief({
       </div>
       {message ? <BriefMessage message={message} /> : null}
     </section>
+  );
+}
+
+function ProviderStatus({ status }: { status: CaseBriefProviderStatus | null }) {
+  if (!status) {
+    return (
+      <div className="brief-provider-state is-unknown">
+        <i />
+        <div>
+          <strong>Provider status unavailable</strong>
+          <span>Generation still fails safely to a grounded deterministic brief.</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!status.configured) {
+    return (
+      <div className="brief-provider-state is-fallback">
+        <i />
+        <div>
+          <strong>Deterministic explanation mode</strong>
+          <span>No explanation model is configured; verified evidence remains available.</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="brief-provider-state is-configured">
+      <i />
+      <div>
+        <strong>{status.endpoint_scope === "local" ? "Local AI configured" : "AI provider configured"}</strong>
+        <span>
+          {status.provider_name} · {status.model_name} · availability verified when generated
+        </span>
+      </div>
+      <em>{status.adapter === "openai-compatible" ? "Structured API" : "JSON gateway"}</em>
+    </div>
   );
 }
 
