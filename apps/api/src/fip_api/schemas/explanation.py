@@ -28,6 +28,23 @@ class CaseBriefCreate(BaseModel):
     hybrid_assessment_id: str | None = None
 
 
+class CaseBriefProviderStatusResponse(BaseModel):
+    configured: bool
+    adapter: Literal["disabled", "json-http", "openai-compatible"]
+    provider_name: str
+    model_name: str | None
+    endpoint_scope: Literal["disabled", "local", "remote"]
+    api_key_configured: bool
+    timeout_seconds: int
+    max_response_bytes: int
+    max_completion_tokens: int
+    structured_output_required: Literal[True] = True
+    connectivity_checked: Literal[False] = False
+    decision_support_only: Literal[True] = True
+    affects_operational_score: Literal[False] = False
+    triggers_automatic_action: Literal[False] = False
+
+
 class GroundingFailureResponse(BaseModel):
     code: str
     location: str

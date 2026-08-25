@@ -60,6 +60,11 @@ fact-checked before display; unavailable or ungrounded output becomes a clearly 
 deterministic fallback. The LLM cannot change scores, classifications, or financial state. See
 [`docs/grounded-case-briefs.md`](docs/grounded-case-briefs.md).
 
+An explicit OpenAI-compatible adapter connects that controlled brief workflow to local models such
+as Qwen running in LM Studio. FIP sends a strict JSON schema, retains the same grounding checks, and
+shows only non-secret provider readiness metadata in the case dossier. See
+[`docs/local-qwen-lm-studio.md`](docs/local-qwen-lm-studio.md).
+
 Authenticated evaluators and operators can inspect a single read-only system evaluation record at
 `/evaluation`. It distinguishes failed controls from evidence that is not observed or not yet
 demonstrated, reports only captured latency, re-verifies material record integrity, and pins the

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime, timedelta
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 from sqlalchemy import select
@@ -34,6 +35,50 @@ class StubCaseBriefProvider:
             raw_output=json.dumps(self.output, sort_keys=True),
             generation_milliseconds=23,
         )
+
+
+def test_case_brief_provider_status_is_authenticated_non_secret_and_read_only(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    headers = _auth_headers(
+        client,
+        db_session,
+        username="provider-status-evaluator",
+        role=UserRole.EVALUATOR,
+    )
+
+    unauthenticated = client.get("/api/v1/explanations/provider-status")
+    with patch(
+        "fip_api.api.routes.explanations.build_case_brief_provider_status",
+        return_value={
+            "configured": False,
+            "adapter": "disabled",
+            "provider_name": "deterministic-fallback",
+            "model_name": None,
+            "endpoint_scope": "disabled",
+            "api_key_configured": False,
+            "timeout_seconds": 8,
+            "max_response_bytes": 262_144,
+            "max_completion_tokens": 1800,
+        },
+    ):
+        response = client.get("/api/v1/explanations/provider-status", headers=headers)
+
+    assert unauthenticated.status_code == 401
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
+    status = response.json()
+    assert status["configured"] is False
+    assert status["adapter"] == "disabled"
+    assert status["model_name"] is None
+    assert status["endpoint_scope"] == "disabled"
+    assert status["connectivity_checked"] is False
+    assert status["decision_support_only"] is True
+    assert status["affects_operational_score"] is False
+    assert status["triggers_automatic_action"] is False
+    assert "endpoint" not in status
+    assert "api_key" not in status
 
 
 def test_valid_grounded_brief_is_cited_audited_and_replay_safe(

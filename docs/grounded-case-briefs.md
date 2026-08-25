@@ -6,10 +6,11 @@ FIP can turn a case's already verified evidence into a concise, cited review bri
 decision support only: it does not calculate or change any risk score, set case priority, classify a
 case, trigger a transaction action, or create an ML label.
 
-The preferred path calls a provider-neutral JSON endpoint. Every candidate response is validated
-against a strict schema and deterministic grounding rules before an analyst can see it. If the
-provider is absent, unavailable, malformed, or ungrounded, FIP displays a server-generated
-deterministic fallback instead. Scoring and the investigation workflow remain available throughout.
+The preferred path calls an explicitly configured JSON-gateway or OpenAI-compatible endpoint. Every
+candidate response is validated against a strict schema and deterministic grounding rules before an
+analyst can see it. If the provider is absent, unavailable, malformed, or ungrounded, FIP displays a
+server-generated deterministic fallback instead. Scoring and the investigation workflow remain
+available throughout.
 
 ## Evidence contract
 
@@ -31,9 +32,15 @@ The provider receives a catalog of individually addressable facts such as:
 Account references and user credentials are not included. The exact sorted evidence catalog and
 lineage are SHA-256 checksummed before generation.
 
-## Provider contract
+## Provider contracts
 
-When configured, FIP sends an HTTP `POST` request with JSON containing:
+FIP supports two explicit transport adapters. `json-http` preserves the provider-neutral gateway
+contract below. `openai-compatible` translates the same versioned evidence into a non-streaming
+chat-completions request with the output schema supplied as `response_format.json_schema`. The
+assistant message content is parsed as JSON and then passes through the same deterministic schema,
+citation, numerical-claim, and prohibited-action checks as gateway output.
+
+In `json-http` mode, FIP sends an HTTP `POST` request with JSON containing:
 
 ```json
 {
@@ -62,14 +69,21 @@ Configuration:
 
 | Variable | Purpose | Default/control |
 | --- | --- | --- |
+| `FIP_LLM_ADAPTER` | Transport contract | `json-http`; also supports `openai-compatible`. |
 | `FIP_LLM_ENDPOINT` | Provider or internal gateway URL | Empty disables provider calls. |
 | `FIP_LLM_API_KEY` | Optional bearer credential | Never returned by the API. |
 | `FIP_LLM_MODEL` | Provider model identifier | Required when an endpoint is set. |
 | `FIP_LLM_PROVIDER_NAME` | Auditable provider label | `json-http` |
-| `FIP_LLM_TIMEOUT_SECONDS` | Hard provider timeout | `8`; maximum `10` |
+| `FIP_LLM_TIMEOUT_SECONDS` | Hard provider timeout | `8`; maximum `120` |
 | `FIP_LLM_MAX_RESPONSE_BYTES` | Maximum response body | `262144`; maximum 1 MiB |
+| `FIP_LLM_MAX_COMPLETION_TOKENS` | OpenAI-compatible output ceiling | `1800`; maximum `8192` |
 
 Production configuration requires HTTPS.
+
+`GET /api/v1/explanations/provider-status` exposes authenticated, non-secret configuration facts
+for the case dossier. It never returns the endpoint or API key and deliberately does not perform a
+network call. Availability is established only when a user requests a brief; a connection or model
+failure follows the existing deterministic-fallback path.
 
 ## Grounding and failure behavior
 
@@ -117,8 +131,8 @@ not select a hidden "latest" hybrid record inside the API.
 
 ## Current limitations
 
-- The adapter defines a generic JSON gateway contract; vendor-specific authentication and response
-  translation belong in a separately tested gateway or future adapter.
+- The built-in adapters cover the generic JSON gateway and OpenAI-compatible chat completions.
+  Other authentication schemes and provider-specific protocols require separately tested adapters.
 - Citation validation proves that statements reference supplied evidence and that numerical claims
   occur in those entries. It is not a general natural-language entailment proof.
 - Case briefs do not retrieve external documents, customer profiles, sanctions data, or web content.

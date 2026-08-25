@@ -3,7 +3,12 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/lib/auth/server";
-import { getCase, getCases, getShadowPredictions } from "@/lib/cases/server";
+import {
+  getCase,
+  getCaseBriefProviderStatus,
+  getCases,
+  getShadowPredictions,
+} from "@/lib/cases/server";
 
 import { CaseActions } from "../../components/case-actions";
 import { GroundedCaseBrief } from "../../components/case-brief";
@@ -18,7 +23,11 @@ export default async function CaseDossierPage({
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const { caseId } = await params;
-  const [caseDetail, cases] = await Promise.all([getCase(caseId), getCases()]);
+  const [caseDetail, cases, providerStatus] = await Promise.all([
+    getCase(caseId),
+    getCases(),
+    getCaseBriefProviderStatus(),
+  ]);
   if (!caseDetail) notFound();
   const shadowPredictions = await getShadowPredictions(caseDetail.transaction.id);
   const reviewCount = cases.filter((item) => item.status !== "classified").length;
@@ -101,6 +110,7 @@ export default async function CaseDossierPage({
               caseBriefs={caseDetail.case_briefs}
               caseId={caseDetail.id}
               hybridAssessments={caseDetail.hybrid_assessments}
+              providerStatus={providerStatus}
               role={user.role}
             />
 
