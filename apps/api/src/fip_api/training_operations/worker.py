@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import argparse
 import logging
 import os
 import socket
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from contextlib import suppress
 from time import sleep
 from uuid import uuid4
@@ -118,7 +119,14 @@ def process_next_training_run(
     return True
 
 
-def main() -> int:
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Run the governed FIP candidate-training worker.")
+    parser.add_argument(
+        "--once",
+        action="store_true",
+        help="Process at most one queued run and exit (for scheduled cloud jobs).",
+    )
+    arguments = parser.parse_args(argv)
     settings = get_settings()
     logging.basicConfig(
         level=logging.INFO,
@@ -126,6 +134,13 @@ def main() -> int:
     )
     worker_id = _worker_id()
     LOGGER.info("training worker %s started", worker_id)
+    if arguments.once:
+        processed = process_next_training_run(
+            worker_id=worker_id,
+            lease_minutes=settings.training_worker_lease_minutes,
+        )
+        LOGGER.info("training worker %s completed one-shot processed=%s", worker_id, processed)
+        return 0
     try:
         while True:
             processed = process_next_training_run(

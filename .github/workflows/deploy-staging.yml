@@ -1,0 +1,76 @@
+name: Deploy staging
+
+on:
+  workflow_run:
+    workflows:
+      - Security
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: fip-staging-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      FIP_ENVIRONMENT: staging
+      FIP_DATABASE_URL: ${{ secrets.FIP_DATABASE_URL }}
+      FIP_JWT_SECRET: ${{ secrets.FIP_JWT_SECRET }}
+      FIP_BOOTSTRAP_ADMIN_USERNAME: ${{ secrets.FIP_BOOTSTRAP_ADMIN_USERNAME }}
+      FIP_BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.FIP_BOOTSTRAP_ADMIN_PASSWORD }}
+      RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+    steps:
+      - name: Require the matching CI run
+        if: github.event_name == 'workflow_run'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          for attempt in $(seq 1 30); do
+            status=$(gh run list --workflow CI --commit "$HEAD_SHA" --limit 1 --json status --jq '.[0].status // "missing"')
+            conclusion=$(gh run list --workflow CI --commit "$HEAD_SHA" --limit 1 --json conclusion --jq '.[0].conclusion // ""')
+            if [ "$status" = "completed" ]; then
+              test "$conclusion" = "success"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "The matching CI run did not complete successfully within five minutes." >&2
+          exit 1
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --project apps/api --locked
+      - name: Apply database migrations
+        run: uv run --project apps/api alembic -c apps/api/alembic.ini upgrade head
+      - name: Bootstrap the first administrator idempotently
+        run: uv run --project apps/api fip-api-bootstrap
+      - name: Deploy API
+        run: |
+          test -n "$RENDER_DEPLOY_HOOK_URL"
+          curl --fail --silent --show-error --request POST "$RENDER_DEPLOY_HOOK_URL"
+      - name: Deploy web
+        if: env.VERCEL_DEPLOY_HOOK_URL != ''
+        run: curl --fail --silent --show-error --request POST "$VERCEL_DEPLOY_HOOK_URL"

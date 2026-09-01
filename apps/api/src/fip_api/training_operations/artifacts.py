@@ -1,14 +1,22 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import shutil
 import stat
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
 from pydantic import ValidationError
 
 from fip_api.core.checksums import canonical_json_checksum
+from fip_api.core.object_store import (
+    ObjectStoreError,
+    ObjectStoreObjectMissing,
+    S3ObjectStore,
+)
 from fip_api.operational_ml import PIPELINE_VERSION
 from fip_api.operational_ml.pipeline import sha256_file
 from fip_api.schemas.model_registry import ModelRegistrationCreate
@@ -269,6 +277,127 @@ class TrainingArtifactStore:
         directory.chmod(0o550)
 
 
+class S3TrainingArtifactStore(TrainingArtifactStore):
+    """Verified local training-bundle cache backed by S3-compatible storage."""
+
+    def __init__(
+        self,
+        root: Path,
+        *,
+        max_artifact_bytes: int,
+        object_store: S3ObjectStore,
+    ) -> None:
+        super().__init__(root, max_artifact_bytes=max_artifact_bytes)
+        self.object_store = object_store
+
+    def inspect(  # noqa: PLR0913
+        self,
+        bundle_key: str,
+        *,
+        candidate_version: str,
+        configuration_checksum: str,
+        dataset_checksum: str,
+        dataset_display_id: str,
+        dataset_feature_set_version: str,
+        maximum_false_positive_rate: str,
+        seed: int,
+    ) -> TrainingBundleInspection:
+        self._ensure_local(bundle_key)
+        return super().inspect(
+            bundle_key,
+            candidate_version=candidate_version,
+            configuration_checksum=configuration_checksum,
+            dataset_checksum=dataset_checksum,
+            dataset_display_id=dataset_display_id,
+            dataset_feature_set_version=dataset_feature_set_version,
+            maximum_false_positive_rate=maximum_false_positive_rate,
+            seed=seed,
+        )
+
+    def artifact_path(
+        self,
+        bundle_key: str,
+        *,
+        model_kind: str,
+        artifact_name: str,
+    ) -> Path:
+        self._ensure_local(bundle_key)
+        return super().artifact_path(
+            bundle_key,
+            model_kind=model_kind,
+            artifact_name=artifact_name,
+        )
+
+    def evidence_path(self, bundle_key: str, *, evidence_name: str) -> Path:
+        self._ensure_local(bundle_key)
+        return super().evidence_path(bundle_key, evidence_name=evidence_name)
+
+    def make_immutable(self, bundle_key: str) -> None:
+        key = _validated_bundle_key(bundle_key)
+        super().make_immutable(key)
+        directory = self.output_directory(key)
+        try:
+            for relative_path in sorted(EXPECTED_BUNDLE_FILES | {"run-manifest.json"}):
+                path = _safe_file(
+                    directory,
+                    relative_path,
+                    max_bytes=self.max_artifact_bytes,
+                )
+                self.object_store.upload_file(
+                    self._remote_key(key, relative_path),
+                    path,
+                    checksum=sha256_file(path),
+                    content_type=_content_type(relative_path),
+                )
+        except ObjectStoreError as exc:
+            raise TrainingBundleIntegrityError(
+                "The verified candidate bundle could not be persisted remotely."
+            ) from exc
+
+    def _ensure_local(self, bundle_key: str) -> None:
+        key = _validated_bundle_key(bundle_key)
+        destination = self.output_directory(key)
+        if destination.exists() or destination.is_symlink():
+            return
+        self.root.mkdir(mode=0o750, parents=True, exist_ok=True)
+        temporary = Path(tempfile.mkdtemp(prefix=f".{key}.", dir=self.root))
+        try:
+            for relative_path in sorted(EXPECTED_BUNDLE_FILES | {"run-manifest.json"}):
+                local_path = temporary / relative_path
+                local_path.parent.mkdir(mode=0o750, parents=True, exist_ok=True)
+                self.object_store.download_file(
+                    self._remote_key(key, relative_path),
+                    local_path,
+                    max_bytes=(
+                        MAX_JSON_BYTES
+                        if relative_path.endswith(".json")
+                        else self.max_artifact_bytes
+                    ),
+                )
+            for path in sorted(temporary.rglob("*"), reverse=True):
+                path.chmod(0o440 if path.is_file() else 0o550)
+            temporary.chmod(0o550)
+            try:
+                os.rename(temporary, destination)
+            except FileExistsError:
+                shutil.rmtree(temporary)
+        except ObjectStoreObjectMissing as exc:
+            shutil.rmtree(temporary, ignore_errors=True)
+            raise TrainingBundleMissing("The candidate bundle is not available.") from exc
+        except ObjectStoreError as exc:
+            shutil.rmtree(temporary, ignore_errors=True)
+            raise TrainingBundleIntegrityError(
+                "The remote candidate bundle could not be cached safely."
+            ) from exc
+        except Exception:
+            shutil.rmtree(temporary, ignore_errors=True)
+            raise
+
+    @staticmethod
+    def _remote_key(bundle_key: str, relative_path: str) -> str:
+        return f"training-artifacts/{bundle_key}/{relative_path}"
+
+
 def _validated_bundle_key(value: str) -> str:
     if not BUNDLE_KEY_PATTERN.fullmatch(value):
         raise TrainingBundleIntegrityError("The candidate bundle key is invalid.")
@@ -325,3 +454,11 @@ def _number_text(value: object) -> str:
         return format(float(str(value)), ".12g")
     except ValueError:
         return str(value)
+
+
+def _content_type(relative_path: str) -> str:
+    if relative_path.endswith(".json"):
+        return "application/json"
+    if relative_path.endswith(".md"):
+        return "text/markdown; charset=utf-8"
+    return "application/octet-stream"

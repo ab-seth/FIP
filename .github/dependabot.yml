@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      javascript-production:
+        dependency-type: production
+    open-pull-requests-limit: 5
+  - package-ecosystem: uv
+    directory: /apps/api
+    schedule:
+      interval: weekly
+    groups:
+      python-production:
+        dependency-type: production
+    open-pull-requests-limit: 5

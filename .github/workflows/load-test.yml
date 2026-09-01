@@ -1,0 +1,46 @@
+name: Authorized load test
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: Owned API base URL; never target a third party or Vercel Hobby deployment
+        required: true
+        type: string
+      authorization_confirmed:
+        description: Confirm that you own the target and its hosting terms permit this test
+        required: true
+        type: choice
+        options:
+          - "no"
+          - "yes"
+
+permissions:
+  contents: read
+
+jobs:
+  k6:
+    if: inputs.authorization_confirmed == 'yes'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate target
+        env:
+          TARGET_URL: ${{ inputs.target_url }}
+        run: |
+          case "$TARGET_URL" in
+            https://*) ;;
+            *) echo "The hosted load-test target must use HTTPS." >&2; exit 1 ;;
+          esac
+      - uses: grafana/setup-k6-action@v1
+        with:
+          k6-version: "2.1.0"
+      - name: Run bounded API test
+        env:
+          BASE_URL: ${{ inputs.target_url }}
+          FIP_LOAD_USERNAME: ${{ secrets.FIP_LOAD_USERNAME }}
+          FIP_LOAD_PASSWORD: ${{ secrets.FIP_LOAD_PASSWORD }}
+        run: k6 run tests/load/api-smoke.js

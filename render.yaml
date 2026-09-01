@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: fip-api-staging
+    runtime: docker
+    plan: free
+    region: oregon
+    repo: https://github.com/ab-seth/FIP
+    branch: main
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: ./apps/api
+    dockerCommand: uvicorn fip_api.main:app --host 0.0.0.0 --port 8000
+    healthCheckPath: /api/v1/health/ready
+    autoDeployTrigger: off
+    maxShutdownDelaySeconds: 30
+    buildFilter:
+      paths:
+        - apps/api/**
+        - render.yaml
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: FIP_ENVIRONMENT
+        value: staging
+      - key: FIP_DATABASE_URL
+        sync: false
+      - key: FIP_JWT_SECRET
+        generateValue: true
+      - key: FIP_CORS_ORIGINS
+        sync: false
+      - key: FIP_TRUSTED_HOSTS
+        value: '["fip-api-staging.onrender.com"]'
+      - key: FIP_ARTIFACT_STORE
+        value: s3
+      - key: FIP_MODEL_ARTIFACT_ROOT
+        value: /tmp/fip/model-artifacts
+      - key: FIP_TRAINING_ARTIFACT_ROOT
+        value: /tmp/fip/training-artifacts
+      - key: FIP_OBJECT_STORE_ENDPOINT
+        sync: false
+      - key: FIP_OBJECT_STORE_BUCKET
+        sync: false
+      - key: FIP_OBJECT_STORE_ACCESS_KEY_ID
+        sync: false
+      - key: FIP_OBJECT_STORE_SECRET_ACCESS_KEY
+        sync: false
+      - key: FIP_OBJECT_STORE_REGION
+        value: auto
+      - key: FIP_OBJECT_STORE_PREFIX
+        value: fip-staging
+      - key: FIP_BOOTSTRAP_ADMIN_USERNAME
+        value: ""
+      - key: FIP_BOOTSTRAP_ADMIN_PASSWORD
+        value: ""
