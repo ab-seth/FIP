@@ -15,7 +15,9 @@ COPY alembic.ini ./
 COPY alembic ./alembic
 COPY src ./src
 
-RUN pip install --no-cache-dir .
+RUN python -m pip install --no-cache-dir . \
+    && python -m pip uninstall --yes msgpack setuptools \
+    && python -m pip uninstall --yes pip
 
 USER fip
 

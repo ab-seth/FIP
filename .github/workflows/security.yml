@@ -26,7 +26,9 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
-      - run: uv export --project apps/api --locked --no-dev --format requirements-txt --output-file /tmp/fip-requirements.txt
+      - run: >-
+          uv export --project apps/api --locked --no-dev --no-emit-project --no-hashes
+          --format requirements-txt --output-file /tmp/fip-requirements.txt
       - run: python -m pip install --disable-pip-version-check pip-audit==2.10.1
       - run: python -m pip_audit --requirement /tmp/fip-requirements.txt
       - uses: pnpm/action-setup@v4
