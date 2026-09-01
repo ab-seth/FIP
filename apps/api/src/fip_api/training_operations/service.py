@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from fip_api.core.checksums import canonical_json_checksum
 from fip_api.core.config import get_settings
+from fip_api.core.object_store import S3ObjectStore
 from fip_api.models import (
     DatasetReadinessStatus,
     OperationalDatasetSnapshot,
@@ -28,6 +29,7 @@ from fip_api.schemas.training_run import (
 )
 from fip_api.training_datasets import DatasetNotFound, get_dataset, verify_dataset_integrity
 from fip_api.training_operations.artifacts import (
+    S3TrainingArtifactStore,
     TrainingArtifactStore,
     TrainingBundleError,
     TrainingBundleInspection,
@@ -53,6 +55,12 @@ class TrainingRunStateError(ValueError):
 
 def get_training_artifact_store() -> TrainingArtifactStore:
     settings = get_settings()
+    if settings.artifact_store == "s3":
+        return S3TrainingArtifactStore(
+            settings.training_artifact_root,
+            max_artifact_bytes=settings.training_artifact_max_bytes,
+            object_store=S3ObjectStore.from_settings(settings),
+        )
     return TrainingArtifactStore(
         settings.training_artifact_root,
         max_artifact_bytes=settings.training_artifact_max_bytes,

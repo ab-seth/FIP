@@ -1,0 +1,57 @@
+name: Governed worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      worker:
+        description: Process at most one queued governed job
+        required: true
+        type: choice
+        options:
+          - training
+          - benchmark
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fip-staging-${{ inputs.worker }}-worker
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      FIP_ENVIRONMENT: staging
+      FIP_DATABASE_URL: ${{ secrets.FIP_DATABASE_URL }}
+      FIP_JWT_SECRET: ${{ secrets.FIP_JWT_SECRET }}
+      FIP_ARTIFACT_STORE: s3
+      FIP_OBJECT_STORE_ENDPOINT: ${{ secrets.FIP_OBJECT_STORE_ENDPOINT }}
+      FIP_OBJECT_STORE_BUCKET: ${{ secrets.FIP_OBJECT_STORE_BUCKET }}
+      FIP_OBJECT_STORE_ACCESS_KEY_ID: ${{ secrets.FIP_OBJECT_STORE_ACCESS_KEY_ID }}
+      FIP_OBJECT_STORE_SECRET_ACCESS_KEY: ${{ secrets.FIP_OBJECT_STORE_SECRET_ACCESS_KEY }}
+      FIP_OBJECT_STORE_REGION: auto
+      FIP_OBJECT_STORE_PREFIX: fip-staging
+      FIP_MODEL_ARTIFACT_ROOT: /tmp/fip/model-artifacts
+      FIP_TRAINING_ARTIFACT_ROOT: /tmp/fip/training-artifacts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --project apps/api --group training --locked
+      - name: Process one queued job
+        env:
+          WORKER: ${{ inputs.worker }}
+        run: |
+          if [ "$WORKER" = "training" ]; then
+            uv run --project apps/api fip-training-worker --once
+          else
+            uv run --project apps/api fip-benchmark-worker --once
+          fi

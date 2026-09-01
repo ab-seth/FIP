@@ -175,6 +175,14 @@ Operational training is deliberately separate from those public-data research wo
 operational run requires a ready institution-owned snapshot; generated fixtures are test-only and
 the repository makes no claim that the current label inventory is sufficient.
 
+## Secure hosted demonstration
+
+The versioned staging topology, provider configuration, secret inventory, deployment workflow,
+remote artifact durability, encrypted backups, monitoring, load testing, vulnerability testing and
+production-promotion controls are documented in
+[`docs/secure-cloud-deployment.md`](docs/secure-cloud-deployment.md). Free hosting is treated as a
+demonstration environment, never as production infrastructure.
+
 ## Status
 
 The project is under active MVP development. It must not be used for real customer data, automated financial actions, or production fraud decisions.

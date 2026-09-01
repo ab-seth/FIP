@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import argparse
 import logging
 import os
 import socket
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from time import perf_counter_ns, sleep
 from uuid import uuid4
 
@@ -122,7 +123,14 @@ def _execute_benchmark(
     return batch, elapsed_milliseconds
 
 
-def main() -> int:
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Run the governed FIP benchmark worker.")
+    parser.add_argument(
+        "--once",
+        action="store_true",
+        help="Process at most one queued run and exit (for scheduled cloud jobs).",
+    )
+    arguments = parser.parse_args(argv)
     settings = get_settings()
     logging.basicConfig(
         level=logging.INFO,
@@ -130,6 +138,13 @@ def main() -> int:
     )
     worker_id = _worker_id()
     LOGGER.info("benchmark worker %s started", worker_id)
+    if arguments.once:
+        processed = process_next_benchmark_run(
+            worker_id=worker_id,
+            lease_minutes=settings.benchmark_worker_lease_minutes,
+        )
+        LOGGER.info("benchmark worker %s completed one-shot processed=%s", worker_id, processed)
+        return 0
     try:
         while True:
             processed = process_next_benchmark_run(

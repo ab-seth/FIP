@@ -5,6 +5,7 @@ from fip_api.model_runtime.artifacts import (
     ArtifactStatus,
     ArtifactStoreError,
     ModelArtifactStore,
+    S3ModelArtifactStore,
     get_model_artifact_store,
 )
 from fip_api.model_runtime.service import (
@@ -23,6 +24,7 @@ __all__ = [
     "ArtifactNotInstalled",
     "ArtifactStoreError",
     "ModelArtifactStore",
+    "S3ModelArtifactStore",
     "OperationalArtifactMismatch",
     "ShadowBatchResult",
     "VerifiedOperationalRuntime",

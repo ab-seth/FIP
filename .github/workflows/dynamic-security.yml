@@ -1,0 +1,41 @@
+name: Authorized dynamic security test
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: Owned staging URL only
+        required: true
+        type: string
+      authorization_confirmed:
+        description: Confirm that you own the target and its hosting terms permit this scan
+        required: true
+        type: choice
+        options:
+          - "no"
+          - "yes"
+
+permissions:
+  contents: read
+
+jobs:
+  zap-baseline:
+    if: inputs.authorization_confirmed == 'yes'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate target
+        env:
+          TARGET_URL: ${{ inputs.target_url }}
+        run: |
+          case "$TARGET_URL" in
+            https://*) ;;
+            *) echo "The dynamic security target must use HTTPS." >&2; exit 1 ;;
+          esac
+      - uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: ${{ inputs.target_url }}
+          allow_issue_writing: false
+          fail_action: true

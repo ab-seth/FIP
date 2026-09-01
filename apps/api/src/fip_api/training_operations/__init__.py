@@ -1,6 +1,7 @@
 """Durable control-plane orchestration for offline operational candidate training."""
 
 from fip_api.training_operations.artifacts import (
+    S3TrainingArtifactStore,
     TrainingArtifactStore,
     TrainingBundleError,
     TrainingBundleInspection,
@@ -26,6 +27,7 @@ from fip_api.training_operations.service import (
 
 __all__ = [
     "TrainingArtifactStore",
+    "S3TrainingArtifactStore",
     "TrainingBundleError",
     "TrainingBundleInspection",
     "TrainingBundleIntegrityError",

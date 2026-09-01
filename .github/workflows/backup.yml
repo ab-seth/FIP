@@ -1,0 +1,58 @@
+name: Encrypted database backup
+
+on:
+  schedule:
+    - cron: "41 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fip-staging-database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      DATABASE_URL: ${{ secrets.FIP_BACKUP_DATABASE_URL }}
+      BACKUP_ENCRYPTION_KEY: ${{ secrets.FIP_BACKUP_ENCRYPTION_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.FIP_OBJECT_STORE_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.FIP_OBJECT_STORE_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      R2_ENDPOINT: ${{ secrets.FIP_OBJECT_STORE_ENDPOINT }}
+      R2_BUCKET: ${{ secrets.FIP_OBJECT_STORE_BUCKET }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Create a consistent PostgreSQL dump
+        run: |
+          mkdir -p /tmp/fip-backup
+          docker run --rm \
+            -e DATABASE_URL \
+            postgres:17-alpine \
+            sh -c 'pg_dump "$DATABASE_URL" --format=custom --no-owner --no-acl' \
+            > /tmp/fip-backup/fip.dump
+          test -s /tmp/fip-backup/fip.dump
+      - name: Encrypt and checksum the dump
+        run: |
+          openssl enc -aes-256-cbc -pbkdf2 -salt \
+            -in /tmp/fip-backup/fip.dump \
+            -out /tmp/fip-backup/fip.dump.enc \
+            -pass env:BACKUP_ENCRYPTION_KEY
+          sha256sum /tmp/fip-backup/fip.dump.enc > /tmp/fip-backup/fip.dump.enc.sha256
+          rm /tmp/fip-backup/fip.dump
+      - name: Upload immutable backup objects
+        run: |
+          backup_key="backups/postgres/$(date -u +%Y/%m/%d)/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          aws s3 cp /tmp/fip-backup/fip.dump.enc \
+            "s3://${R2_BUCKET}/${backup_key}/fip.dump.enc" \
+            --endpoint-url "$R2_ENDPOINT" \
+            --only-show-errors
+          aws s3 cp /tmp/fip-backup/fip.dump.enc.sha256 \
+            "s3://${R2_BUCKET}/${backup_key}/fip.dump.enc.sha256" \
+            --endpoint-url "$R2_ENDPOINT" \
+            --only-show-errors
