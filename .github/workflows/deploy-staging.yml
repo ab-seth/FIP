@@ -42,8 +42,8 @@ jobs:
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           for attempt in $(seq 1 30); do
-            status=$(gh run list --workflow CI --commit "$HEAD_SHA" --limit 1 --json status --jq '.[0].status // "missing"')
-            conclusion=$(gh run list --workflow CI --commit "$HEAD_SHA" --limit 1 --json conclusion --jq '.[0].conclusion // ""')
+            status=$(gh run list -R "$GITHUB_REPOSITORY" --workflow CI --commit "$HEAD_SHA" --limit 1 --json status --jq '.[0].status // "missing"')
+            conclusion=$(gh run list -R "$GITHUB_REPOSITORY" --workflow CI --commit "$HEAD_SHA" --limit 1 --json conclusion --jq '.[0].conclusion // ""')
             if [ "$status" = "completed" ]; then
               test "$conclusion" = "success"
               exit 0
