@@ -33,11 +33,11 @@ jobs:
       FIP_DATABASE_URL: postgresql+psycopg://fip:fip@localhost:5432/fip_test
       FIP_JWT_SECRET: ci-only-secret-with-at-least-32-characters
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
       - run: uv sync --project apps/api --all-groups --locked
@@ -51,11 +51,11 @@ jobs:
     name: Web checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
         with:
           version: 11.16.0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "24"
           cache: pnpm
