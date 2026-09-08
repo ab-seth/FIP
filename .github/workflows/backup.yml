@@ -25,7 +25,7 @@ jobs:
       R2_ENDPOINT: ${{ secrets.FIP_OBJECT_STORE_ENDPOINT }}
       R2_BUCKET: ${{ secrets.FIP_OBJECT_STORE_BUCKET }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Create a consistent PostgreSQL dump

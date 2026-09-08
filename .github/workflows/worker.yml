@@ -36,13 +36,13 @@ jobs:
       FIP_MODEL_ARTIFACT_ROOT: /tmp/fip/model-artifacts
       FIP_TRAINING_ARTIFACT_ROOT: /tmp/fip/training-artifacts
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
       - run: uv sync --project apps/api --group training --locked
