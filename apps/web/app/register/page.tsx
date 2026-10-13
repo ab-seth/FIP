@@ -5,25 +5,25 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/server";
 
 export const metadata: Metadata = {
-  title: "FIP | Request controlled access",
-  description: "Request reviewed access to the Financial Integrity Platform.",
+  title: "FIP | Plan an institutional integration",
+  description: "Start an integration and governance review for the Financial Integrity Platform.",
 };
 
 const accessStages = [
   {
     index: "01",
-    title: "Identify the organization",
-    text: "Establish who is evaluating FIP and the financial-risk investigation in scope.",
+    title: "Map the operating model",
+    text: "Define the institution, investigation teams, risk programs, and outcomes FIP will support.",
   },
   {
     index: "02",
-    title: "Define the agent workflow",
-    text: "Select the specialist agents, model environment, evidence sources, and human responsibilities to evaluate.",
+    title: "Design the integration",
+    text: "Map approved data sources, alert flows, models, identity controls, and case-system handoffs.",
   },
   {
     index: "03",
-    title: "Approve the AI boundary",
-    text: "Activate only the models, tools, data access, and operating roles approved for the evaluation.",
+    title: "Govern the rollout",
+    text: "Agree on deployment boundaries, data handling, operating roles, validation gates, and human authority.",
   },
 ] as const;
 
@@ -46,27 +46,27 @@ export default async function RegisterPage() {
 
       <section className="access-request-layout">
         <div className="access-request-copy">
-          <p className="landing-section-index">Controlled AI evaluation</p>
-          <h1>Evaluate the agent network inside a trusted boundary.</h1>
+          <p className="landing-section-index">Institutional integration</p>
+          <h1>Plan a governed FIP deployment for your organization.</h1>
           <p>
-            FIP does not open self-service access to financial investigations or connected AI
-            providers. The access desk first confirms the organization, intended workflow, model
-            environment, and human authority boundary.
+            FIP is introduced through an integration and governance review. Together, we map your
+            investigation workflow, data environment, approved intelligence services, security
+            controls, and the decisions that remain with your team.
           </p>
           <div className="access-request-actions">
-            <Link className="landing-primary-action" href="/login?support=access">
-              Open access support <span aria-hidden="true">→</span>
+            <Link className="landing-primary-action" href="/login?support=integration">
+              Start integration review <span aria-hidden="true">→</span>
             </Link>
             <Link className="landing-secondary-action" href="/">Return to overview</Link>
           </div>
           <small>
-            The access desk prepares the evaluation handoff. Models, tools, and account activation
-            remain administrator controlled.
+            Your organization retains control of approved data, models, roles, and account
+            activation throughout deployment.
           </small>
         </div>
 
         <div className="access-request-register">
-          <header><span>AI EVALUATION / REQUEST</span><strong>Review sequence</strong></header>
+          <header><span>INTEGRATION / REQUEST</span><strong>Planning sequence</strong></header>
           <ol>
             {accessStages.map((stage) => (
               <li key={stage.index}>
@@ -76,7 +76,7 @@ export default async function RegisterPage() {
             ))}
           </ol>
           <footer>
-            <span>Provider scoped</span>
+            <span>Environment scoped</span>
             <span>Human approved</span>
             <span>Audit recorded</span>
           </footer>
