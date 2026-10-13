@@ -22,7 +22,7 @@ const navigation: Array<{
   marker: string;
   href: string;
 }> = [
-  { key: "case_register", label: "Case register", marker: "01", href: "/" },
+  { key: "case_register", label: "Case register", marker: "01", href: "/workspace" },
   { key: "case_dossiers", label: "Case dossiers", marker: "02", href: "/cases" },
   {
     key: "audit_ledger",
@@ -61,7 +61,7 @@ export function WorkspaceShell({
   return (
     <div className="app-frame">
       <aside className="sidebar">
-        <Link aria-label="FIP case register" className="identity" href="/">
+        <Link aria-label="FIP case register" className="identity" href="/workspace">
           <span className="monogram">FIP</span>
           <span className="identity-name">Financial Integrity Platform</span>
         </Link>
