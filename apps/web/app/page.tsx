@@ -4,34 +4,34 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/server";
 
 export const metadata: Metadata = {
-  title: "FIP | Agentic AI for financial investigations",
+  title: "FIP | AI fraud intelligence across the transaction lifecycle",
   description:
-    "A governed agentic AI platform for fraud detection, evidence-grounded investigation, model operations, and human review.",
+    "A governed AI platform for pre-authorization fraud detection, continuous transaction monitoring, and post-transaction investigation.",
 };
 
 const agentNetwork = [
   {
     index: "A01",
     title: "Intake Agent",
-    text: "Validates transaction data, preserves its source, and creates the semantic feature snapshot every downstream agent receives.",
+    text: "Validates user- and system-initiated transaction requests, posted events, alerts, and case data while preserving the source of every signal.",
     output: "source + schema + features",
   },
   {
     index: "A02",
     title: "Risk Agent",
-    text: "Runs deterministic policy signals alongside trusted ML evidence without allowing one system to silently replace another.",
+    text: "Runs deterministic policy signals alongside trusted ML evidence at initiation and during ongoing monitoring without hiding either assessment.",
     output: "rules + model comparison",
   },
   {
     index: "A03",
     title: "Evidence Agent",
-    text: "Tests proposed claims against the case record, rejects unsupported assertions, and binds valid claims to exact citations.",
+    text: "Tests real-time risk signals and post-transaction findings against available evidence, rejecting unsupported claims and binding valid ones to their sources.",
     output: "grounding + validation",
   },
   {
     index: "A04",
     title: "Briefing Agent",
-    text: "Turns validated signals into an investigator-ready brief containing risk factors, uncertainties, and review prompts.",
+    text: "Turns validated signals into decision context or an investigator-ready brief containing risk factors, uncertainty, and review prompts.",
     output: "cited case brief",
   },
   {
@@ -70,7 +70,7 @@ const runtimePrinciples = [
   {
     index: "05",
     title: "Authority gates",
-    text: "Benchmarks, shadow evaluation, role controls, and human approval stand between generated intelligence and consequential action.",
+    text: "Model evaluation, role controls, and human approval stand between generated intelligence and consequential action.",
     note: "Autonomy remains bounded",
   },
 ] as const;
@@ -116,7 +116,7 @@ export default async function LandingPage() {
         </Link>
         <nav aria-label="Landing page navigation">
           <a href="#agents">Agents</a>
-          <a href="#ai-stack">AI stack</a>
+          <a href="#integration">Integration</a>
           <a href="#boundary">Safeguards</a>
         </nav>
         <div className="landing-entry">
@@ -133,33 +133,33 @@ export default async function LandingPage() {
       <section className="landing-hero landing-agent-hero">
         <div className="landing-hero-copy">
           <p className="landing-kicker">
-            <span>Agentic fraud intelligence</span>
+            <span>Transaction lifecycle intelligence</span>
             <span>Evidence governed</span>
           </p>
-          <h1>A team of AI agents for every financial investigation.</h1>
+          <h1>AI fraud intelligence before and after a transaction.</h1>
           <p className="landing-deck">
-            FIP coordinates specialist agents across intake, risk, evidence, explanation, and
-            model governance—combining rules, machine learning, and LLM reasoning while keeping
-            final authority with a human investigator.
+            FIP connects user- and system-initiated transactions, risk signals, posted activity,
+            and case evidence to specialist AI agents—supporting intervention before authorization
+            as well as monitoring and investigation after transactions occur.
           </p>
           <div className="landing-actions">
             <Link className="landing-primary-action" href="/register">
-              Request AI evaluation <span aria-hidden="true">→</span>
+              Plan an integration <span aria-hidden="true">→</span>
             </Link>
-            <a className="landing-secondary-action" href="#demo">
+            <a className="landing-secondary-action" href="#product-film">
               Watch the 51-second film
             </a>
           </div>
           <p className="landing-hero-note">
-            Local or hosted models · Structured tools · Human authorization
+            Pre-authorization signals · Continuous monitoring · Post-transaction investigation
           </p>
         </div>
 
-        <div aria-label="Illustrative FIP agent orchestration trace" className="landing-agent-console">
+        <div aria-label="FIP agent orchestration workflow" className="landing-agent-console">
           <header>
             <div>
               <span className="landing-agent-console-mark">FIP / AGENT RUN</span>
-              <p>Illustrative orchestration trace</p>
+              <p>Investigation orchestration</p>
             </div>
             <span className="landing-agent-live"><i /> Coordinating</span>
           </header>
@@ -210,13 +210,13 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <section aria-labelledby="film-title" className="landing-film" id="demo">
+      <section aria-labelledby="film-title" className="landing-film" id="product-film">
         <header>
           <p className="landing-section-index">01 / Product film</p>
-          <h2 id="film-title">Why the back office needs an agent network.</h2>
+          <h2 id="film-title">Why fraud operations need an agent network.</h2>
           <p>
-            See how FIP reframes fragmented alerts, systems, and evidence as one coordinated
-            investigation workflow.
+            See how FIP connects fragmented signals, systems, and evidence from transaction
+            initiation through investigation.
           </p>
         </header>
         <figure>
@@ -236,8 +236,8 @@ export default async function LandingPage() {
             <span>00:51 · Sound available</span>
           </figcaption>
           <p id="film-summary">
-            FIP replaces fragmented alert review with one traceable system that brings together
-            AI assistance, evidence, and accountable human decisions.
+            FIP creates one traceable fraud-intelligence workflow across transaction screening,
+            ongoing monitoring, evidence, and accountable human decisions.
           </p>
         </figure>
       </section>
@@ -245,10 +245,10 @@ export default async function LandingPage() {
       <section aria-labelledby="agents-title" className="landing-flow" id="agents">
         <header>
           <p className="landing-section-index">02 / Agent network</p>
-          <h2 id="agents-title">One investigation. Five bounded agents.</h2>
+          <h2 id="agents-title">From transaction intent to investigation record.</h2>
           <p>
-            Each specialist has a narrow responsibility, a defined evidence contract, and a
-            handoff the next agent can inspect.
+            Agents can assemble decision context as a transaction is initiated, monitor activity
+            after posting, and build an evidence-grounded record when investigation is required.
           </p>
         </header>
         <ol className="landing-agent-network">
@@ -268,8 +268,9 @@ export default async function LandingPage() {
           <p className="landing-section-index">03 / Agent runtime</p>
           <h2 id="platform-title">More than a chatbot window.</h2>
           <p>
-            FIP breaks investigation work into controlled responsibilities. Agents use governed
-            tools, exchange structured evidence, and stop at explicit authority boundaries.
+            FIP fits AI into the way institutions screen, monitor, and investigate transactions.
+            Agents use approved tools, exchange structured evidence, and stop at explicit policy
+            and authority boundaries.
           </p>
         </div>
         <ol className="landing-capability-list">
@@ -286,36 +287,36 @@ export default async function LandingPage() {
         </ol>
       </section>
 
-      <section className="landing-model-evidence" id="ai-stack">
+      <section className="landing-model-evidence" id="integration">
         <div className="landing-model-statement">
-          <p className="landing-section-index">04 / Hybrid AI stack</p>
-          <h2>Bring the model. FIP governs the intelligence.</h2>
+          <p className="landing-section-index">04 / Institutional integration</p>
+          <h2>Connect the intelligence your institution already trusts.</h2>
           <p>
-            Connect local models such as Qwen through LM Studio or use an OpenAI-compatible hosted
-            provider. FIP surrounds every completion with structured evidence, validation, and
-            review controls.
+            FIP is designed to connect with approved data sources, risk models, policy rules, and
+            authorization and case workflows. Every AI-generated contribution is bound to source
+            evidence, validation policy, access controls, and accountable review.
           </p>
           <Link href="/register">
-            Evaluate the AI runtime <span aria-hidden="true">→</span>
+            Plan your integration <span aria-hidden="true">→</span>
           </Link>
         </div>
 
-        <div aria-label="FIP hybrid intelligence stack" className="landing-intelligence-stack">
-          <header><span>INTELLIGENCE / STACK</span><strong>Provider-flexible</strong></header>
+        <div aria-label="FIP institutional integration architecture" className="landing-intelligence-stack">
+          <header><span>INTELLIGENCE / CONTROL PLANE</span><strong>Environment-aware</strong></header>
           <div className="landing-stack-sources">
-            <article><span>01</span><strong>Policy rules</strong><small>deterministic</small></article>
-            <article><span>02</span><strong>ML runtime</strong><small>trusted + shadow</small></article>
-            <article><span>03</span><strong>LLM agents</strong><small>local + hosted</small></article>
+            <article><span>01</span><strong>Transaction activity</strong><small>requests + posted events</small></article>
+            <article><span>02</span><strong>Risk intelligence</strong><small>rules + approved models</small></article>
+            <article><span>03</span><strong>Decision operations</strong><small>controls + case queues</small></article>
           </div>
           <div className="landing-stack-gate">
-            <span>VALIDATION GATE</span>
-            <strong>Schema · citations · numerical claims · prohibited actions</strong>
+            <span>GOVERNANCE GATE</span>
+            <strong>Evidence · policy · access · model quality · prohibited actions</strong>
           </div>
           <div className="landing-stack-output">
-            <div><span>STRUCTURED OUTPUT</span><strong>Grounded investigation brief</strong></div>
-            <div><span>AUTHORITY</span><strong>Human investigator</strong></div>
+            <div><span>OPERATIONAL OUTPUT</span><strong>Grounded investigation record</strong></div>
+            <div><span>DECISION AUTHORITY</span><strong>Your investigation team</strong></div>
           </div>
-          <footer><span>Provider identity recorded</span><span>Fallbacks remain visible</span></footer>
+          <footer><span>Model and source lineage recorded</span><span>Degraded modes remain visible</span></footer>
         </div>
       </section>
 
@@ -332,8 +333,8 @@ export default async function LandingPage() {
           </div>
         </div>
 
-        <div aria-label="Illustrative agent activity ledger" className="landing-ledger-trace">
-          <header><span>ILLUSTRATIVE ACTIVITY TRACE</span><strong>CASE / 00842</strong></header>
+        <div aria-label="Agent activity record" className="landing-ledger-trace">
+          <header><span>AGENT ACTIVITY RECORD</span><strong>CASE / 00842</strong></header>
           <ol>
             {traceEvents.map((event) => (
               <li key={event.id}>
@@ -356,18 +357,18 @@ export default async function LandingPage() {
           <article>
             <span>FIP agents can</span>
             <ul>
-              <li>collect and compare investigation evidence</li>
-              <li>invoke approved rules, models, and validators</li>
-              <li>produce cited briefs with uncertainty</li>
-              <li>recommend the next review step</li>
+              <li>evaluate user- and system-initiated transaction context</li>
+              <li>route risk signals to institution-approved controls</li>
+              <li>monitor posted activity for emerging patterns</li>
+              <li>build cited investigation records with uncertainty</li>
             </ul>
           </article>
           <article>
             <span>FIP agents cannot</span>
             <ul>
-              <li>silently change an operational score</li>
+              <li>independently approve or decline a transaction</li>
+              <li>override institutional policy or access controls</li>
               <li>declare fraud proven</li>
-              <li>classify a case without a human</li>
               <li>block, freeze, or move funds</li>
             </ul>
           </article>
@@ -376,16 +377,17 @@ export default async function LandingPage() {
 
       <section className="landing-access" id="access">
         <div>
-          <p className="landing-section-index">Controlled AI evaluation</p>
-          <h2>Put the agent network inside a real review workflow.</h2>
+          <p className="landing-section-index">Integration planning</p>
+          <h2>Bring governed AI into your transaction-risk operation.</h2>
         </div>
         <p>
-          Tell us how your team investigates financial risk, which model environment it can use,
-          and where human approval must remain. We will map the right evaluation boundary.
+          Tell us how transactions are initiated and authorized, how posted activity is monitored,
+          how investigations move, and where human authority belongs. We will map FIP to that
+          operating model.
         </p>
         <div>
           <Link className="landing-primary-action" href="/register">
-            Request evaluation <span aria-hidden="true">→</span>
+            Plan an integration <span aria-hidden="true">→</span>
           </Link>
           <Link className="landing-secondary-action" href={entryHref}>{entryLabel}</Link>
         </div>

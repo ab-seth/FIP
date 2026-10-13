@@ -21,7 +21,7 @@ export default async function LoginPage({
 
   const { support } = await searchParams;
   const initialSupportTopic: SupportTopic | undefined =
-    support === "access" ? "Role or access review" : undefined;
+    support === "integration" || support === "access" ? "Institutional access" : undefined;
 
   return <SecureEntry initialSupportTopic={initialSupportTopic} />;
 }

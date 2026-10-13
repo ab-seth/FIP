@@ -5,7 +5,11 @@ import Link from "next/link";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 
 type EntryState = "idle" | "submitting" | "locked" | "success";
-export type SupportTopic = "Sign-in recovery" | "Role or access review" | "Expired session";
+export type SupportTopic =
+  | "Sign-in recovery"
+  | "Role or access review"
+  | "Expired session"
+  | "Institutional access";
 
 function EyeIcon({ hidden }: { hidden: boolean }) {
   return hidden ? (
@@ -214,20 +218,26 @@ export function SecureEntry({ initialSupportTopic }: { initialSupportTopic?: Sup
           </button>
         </div>
         <div className="support-options">
-          {(["Sign-in recovery", "Role or access review", "Expired session"] as SupportTopic[]).map(
-            (topic) => (
+          {(
+            [
+              "Institutional access",
+              "Sign-in recovery",
+              "Role or access review",
+              "Expired session",
+            ] as SupportTopic[]
+          ).map((topic) => (
               <button
                 aria-pressed={supportTopic === topic}
                 key={topic}
                 onClick={() => setSupportTopic(topic)}
                 type="button"
               >
+                {topic === "Institutional access" && "I need institutional access"}
                 {topic === "Sign-in recovery" && "I can’t sign in"}
                 {topic === "Role or access review" && "My access or role is wrong"}
                 {topic === "Expired session" && "My session expired"}
               </button>
-            ),
-          )}
+            ))}
         </div>
         <p aria-live="polite" className="support-note">
           {supportTopic
