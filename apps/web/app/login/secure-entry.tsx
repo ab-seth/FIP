@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type FormEvent, useRef, useState } from "react";
+import Link from "next/link";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 
 type EntryState = "idle" | "submitting" | "locked" | "success";
-type SupportTopic = "Sign-in recovery" | "Role or access review" | "Expired session";
+export type SupportTopic = "Sign-in recovery" | "Role or access review" | "Expired session";
 
 function EyeIcon({ hidden }: { hidden: boolean }) {
   return hidden ? (
@@ -37,14 +38,20 @@ function SupportIcon() {
   );
 }
 
-export function SecureEntry() {
+export function SecureEntry({ initialSupportTopic }: { initialSupportTopic?: SupportTopic }) {
   const router = useRouter();
   const supportDialog = useRef<HTMLDialogElement>(null);
   const [entryState, setEntryState] = useState<EntryState>("idle");
   const [error, setError] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [retryMinutes, setRetryMinutes] = useState(15);
-  const [supportTopic, setSupportTopic] = useState<SupportTopic | null>(null);
+  const [supportTopic, setSupportTopic] = useState<SupportTopic | null>(initialSupportTopic ?? null);
+
+  useEffect(() => {
+    if (initialSupportTopic) {
+      supportDialog.current?.showModal();
+    }
+  }, [initialSupportTopic]);
 
   function openSupport(topic?: SupportTopic) {
     if (topic) {
@@ -92,7 +99,7 @@ export function SecureEntry() {
 
       setEntryState("success");
       window.setTimeout(() => {
-        router.replace("/");
+        router.replace("/workspace");
         router.refresh();
       }, 450);
     } catch {
@@ -104,10 +111,10 @@ export function SecureEntry() {
   return (
     <main className="login-page">
       <div className="login-frame">
-        <div aria-label="Financial Integrity Platform" className="login-brand-tab">
+        <Link aria-label="Financial Integrity Platform overview" className="login-brand-tab" href="/">
           <span aria-hidden="true" className="login-monogram">FIP</span>
           <span>Financial Integrity Platform</span>
-        </div>
+        </Link>
 
         <section aria-labelledby="entry-title" className="login-card">
           <div className="login-heading">

@@ -41,7 +41,7 @@ export default async function CaseDossierPage({
       user={user}
     >
       <div className="dossier-nav">
-        <Link href="/">← Return to case register</Link>
+        <Link href="/workspace">← Return to case register</Link>
         <span className={`case-status status-${caseDetail.status}`}>{statusLabel(caseDetail.status)}</span>
       </div>
 

@@ -3,17 +3,25 @@ import { redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/lib/auth/server";
 
-import { SecureEntry } from "./secure-entry";
+import { SecureEntry, type SupportTopic } from "./secure-entry";
 
 export const metadata: Metadata = {
   title: "FIP | Secure entry",
   description: "Secure entry to the Financial Integrity Platform",
 };
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ support?: string }>;
+}) {
   if (await getCurrentUser()) {
-    redirect("/");
+    redirect("/workspace");
   }
 
-  return <SecureEntry />;
+  const { support } = await searchParams;
+  const initialSupportTopic: SupportTopic | undefined =
+    support === "access" ? "Role or access review" : undefined;
+
+  return <SecureEntry initialSupportTopic={initialSupportTopic} />;
 }
