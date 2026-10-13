@@ -13,17 +13,17 @@ const accessStages = [
   {
     index: "01",
     title: "Identify the organization",
-    text: "Establish who is evaluating FIP and the financial-risk workflow in scope.",
+    text: "Establish who is evaluating FIP and the financial-risk investigation in scope.",
   },
   {
     index: "02",
-    title: "Define the responsibility",
-    text: "Map analyst, evaluator, and administrator duties before any role is assigned.",
+    title: "Define the agent workflow",
+    text: "Select the specialist agents, model environment, evidence sources, and human responsibilities to evaluate.",
   },
   {
     index: "03",
-    title: "Approve the boundary",
-    text: "Activate only the access required for an agreed evaluation or operating role.",
+    title: "Approve the AI boundary",
+    text: "Activate only the models, tools, data access, and operating roles approved for the evaluation.",
   },
 ] as const;
 
@@ -46,11 +46,12 @@ export default async function RegisterPage() {
 
       <section className="access-request-layout">
         <div className="access-request-copy">
-          <p className="landing-section-index">Controlled registration</p>
-          <h1>Access starts with a reviewed request.</h1>
+          <p className="landing-section-index">Controlled AI evaluation</p>
+          <h1>Evaluate the agent network inside a trusted boundary.</h1>
           <p>
-            FIP does not create open accounts for an investigation environment. The access desk
-            first confirms the organization, intended responsibility, and evaluation boundary.
+            FIP does not open self-service access to financial investigations or connected AI
+            providers. The access desk first confirms the organization, intended workflow, model
+            environment, and human authority boundary.
           </p>
           <div className="access-request-actions">
             <Link className="landing-primary-action" href="/login?support=access">
@@ -59,12 +60,13 @@ export default async function RegisterPage() {
             <Link className="landing-secondary-action" href="/">Return to overview</Link>
           </div>
           <small>
-            The access desk prepares the request handoff. Account activation remains administrator controlled.
+            The access desk prepares the evaluation handoff. Models, tools, and account activation
+            remain administrator controlled.
           </small>
         </div>
 
         <div className="access-request-register">
-          <header><span>ACCESS / REQUEST</span><strong>Review sequence</strong></header>
+          <header><span>AI EVALUATION / REQUEST</span><strong>Review sequence</strong></header>
           <ol>
             {accessStages.map((stage) => (
               <li key={stage.index}>
@@ -74,9 +76,9 @@ export default async function RegisterPage() {
             ))}
           </ol>
           <footer>
-            <span>Role-based access</span>
-            <span>Administrator approval</span>
-            <span>Auditable activation</span>
+            <span>Provider scoped</span>
+            <span>Human approved</span>
+            <span>Audit recorded</span>
           </footer>
         </div>
       </section>
