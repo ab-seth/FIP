@@ -13,12 +13,12 @@ const accessStages = [
   {
     index: "01",
     title: "Map the operating model",
-    text: "Define the institution, investigation teams, risk programs, and outcomes FIP will support.",
+    text: "Define the transaction channels, fraud teams, risk programs, and outcomes FIP will support.",
   },
   {
     index: "02",
     title: "Design the integration",
-    text: "Map approved data sources, alert flows, models, identity controls, and case-system handoffs.",
+    text: "Map transaction initiation, authorization, posting, monitoring, models, and case-system handoffs.",
   },
   {
     index: "03",
@@ -50,8 +50,9 @@ export default async function RegisterPage() {
           <h1>Plan a governed FIP deployment for your organization.</h1>
           <p>
             FIP is introduced through an integration and governance review. Together, we map your
-            investigation workflow, data environment, approved intelligence services, security
-            controls, and the decisions that remain with your team.
+            pre-authorization decision flow, post-transaction monitoring, investigation workflow,
+            approved intelligence services, security controls, and the authority that remains with
+            your team.
           </p>
           <div className="access-request-actions">
             <Link className="landing-primary-action" href="/login?support=integration">
